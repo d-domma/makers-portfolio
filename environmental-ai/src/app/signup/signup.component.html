@@ -1,0 +1,133 @@
+<!--
+<div class="auth-container">
+    <div class="auth-form">
+      <label for="username">Username</label>
+      <input
+        type="text"
+        id="username"
+        [(ngModel)]="username"
+        name="username"
+        placeholder="Enter your username"
+        required
+      />
+  
+      <label for="password">Password</label>
+      <input
+        type="password"
+        id="password"
+        [(ngModel)]="password"
+        name="password"
+        placeholder="Enter your password"
+        required
+      />
+  
+      <label for="confirmPassword">Confirm Password</label>
+      <input
+        type="password"
+        id="confirmPassword"
+        [(ngModel)]="confirmPassword"
+        name="confirmPassword"
+        placeholder="Confirm your password"
+        required
+      />
+  
+      <button (click)="signUp()">Sign Up</button>
+  
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+  
+      <button routerLink="/login">Already have an account? Login</button>
+    </div>
+  </div>
+-->
+<div class="auth-container">
+  <div class="auth-form">
+    <label for="username">Username</label>
+    <input
+      type="text"
+      id="username"
+      [(ngModel)]="username"
+      name="username"
+      placeholder="Enter your username"
+      required
+    />
+
+    <label for="name">Name</label>
+    <input
+      type="text"
+      id="name"
+      [(ngModel)]="name"
+      name="name"
+      placeholder="Enter your name"
+      required
+    />
+
+    <label for="age">Age</label>
+    <input
+      type="number"
+      id="age"
+      [(ngModel)]="age"
+      name="age"
+      placeholder="Enter your age"
+      required
+    />
+
+    <label for="email">Email</label>
+    <input
+      type="email"
+      id="email"
+      [(ngModel)]="email"
+      name="email"
+      placeholder="Enter your email"
+      required
+    />
+
+    <label for="password">Create Password</label>
+    <input
+      type="password"
+      id="password"
+      [(ngModel)]="password"
+      name="password"
+      placeholder="Enter your password"
+      (input)="checkPasswordStrength()"
+      required
+    />
+
+    <div class="password-requirements">
+      <ul>
+        <li *ngIf="!isLengthValid">At least 8 characters</li>
+        <li *ngIf="!hasLetters">At least one letter</li>
+        <li *ngIf="!hasNumbers">At least one number</li>
+        <li *ngIf="!hasSymbols">At least one symbol</li>
+      </ul>
+    </div>
+
+    <label for="confirmPassword">Confirm Password</label>
+    <input
+      type="password"
+      id="confirmPassword"
+      [(ngModel)]="confirmPassword"
+      name="confirmPassword"
+      placeholder="Confirm your password"
+      (input)="checkConfirmPassword()"
+      required
+    />
+
+    <div *ngIf="!passwordsMatch" class="error-message">
+      Password doesn't match
+    </div>
+
+    <button (click)="signUp()">Sign Up</button>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="success-message">
+      {{ successMessage }}
+    </div>
+
+    <button routerLink="/login">Already have an account? Login</button>
+  </div>
+</div>

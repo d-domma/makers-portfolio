@@ -1,0 +1,24 @@
+<div class="chat-container">
+  <div class="chat-box">
+    <div *ngFor="let message of messages" class="message" [innerHTML]="message.text"></div>
+
+    <div *ngIf="isThinking" class="thinking">
+      <p>Bot is thinking...</p>
+      <div class="dots">
+        <span>.</span><span>.</span><span>.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-box">
+    <input type="text" [(ngModel)]="userInput" placeholder="Type your message" (keydown.enter)="processInput()"/>
+    <button (click)="processInput()">Send</button>
+  </div>
+</div>
+
+<div *ngIf="questionAsked" class="bot-response">
+  <p>{{ questionText }}</p>
+  <p *ngIf="buildingLink && userInput.toLowerCase() === 'done'">
+    <a [href]="buildingLink" target="_blank">{{ buildingType | titlecase }} Design</a>
+  </p>
+</div>

@@ -1,0 +1,129 @@
+<div class="container">
+  <div class="welcome-section">
+    <div class="welcome-text">
+      <h1>Welcome to the Environmental Sustainability Infrastructure Design Tool</h1>
+      <p>Design buildings that are sustainable, environmentally-friendly, and optimized for human comfort. Our tool helps you create the ideal building design using real-time environmental data and smart recommendations.</p>
+    </div>
+    <div class="image-bubbles">
+      <div class="small-bubble">
+        <img src="/assets/build.png" alt="Small Image">
+      </div>
+      <div class="large-bubble">
+        <img src="/assets/env.png" alt="Large Image">
+      </div>
+    </div>
+  </div>
+
+  <div class="three-d-design" style="background-image: url('/assets/arch.png'); background-size: cover; background-position: center;">
+    <div class="design-blocks">
+      <div class="design-block">
+        <h3>3D House Design</h3>
+        <p>Design the perfect 3D house with personalized layouts, ensuring comfort and sustainability.</p>
+      </div>
+      <div class="design-block">
+        <h3>3D Building Design</h3>
+        <p>Create scalable, eco-friendly building structures suitable for residential or commercial purposes.</p>
+      </div>
+      <div class="design-block">
+        <h3>3D Park Design</h3>
+        <p>Design green spaces that blend with urban areas, improving environmental health and community well-being.</p>
+      </div>
+    </div>
+  </div>
+  <section class="form-section">
+    <div class="form-container">
+      <h3>Enter Your Building Preferences</h3>
+      <form #buildingForm="ngForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="buildingType">Building Type</label>
+          <select id="buildingType" name="buildingType" [(ngModel)]="buildingType" required>
+            <option value="2-story-house">2 Story House</option>
+            <option value="1-story-house">1 Story House</option>
+            <option value="apartment">Apartment Building</option>
+            <option value="school">School</option>
+            <option value="rich-house">Rich House</option>
+            <option value="park">Park</option>
+            <option value="shopping-mall">Shopping Mall</option>
+            <option value="grocery-store">Grocery Store</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="state">State</label>
+          <select id="state" name="state" [(ngModel)]="state" required>
+            <option *ngFor="let state of stateList" [value]="state">{{ state }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="cost">Estimated Cost (in $)</label>
+          <input type="number" id="cost" name="cost" [(ngModel)]="cost" required />
+        </div>
+
+        <div class="form-group">
+          <label for="size">Building Size (in sq ft)</label>
+          <input type="number" id="size" name="size" [(ngModel)]="size" required />
+        </div>
+
+        <div class="form-group">
+          <label for="rooms">Number of Rooms</label>
+          <input type="number" id="rooms" name="rooms" [(ngModel)]="rooms" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Generate Design</button>
+      </form>
+    </div>
+  </section>
+
+
+  <div *ngIf="generatedDesign" class="generated-design">
+    <div class="design-box top-left">
+      <p><strong>Building Type:</strong> {{ buildingType | titlecase }}</p>
+    </div>
+
+    <div class="design-box top-right">
+      <p><strong>Benefits to You:</strong> {{ benefits }}</p>
+    </div>
+
+    <div class="design-link">
+      <a [href]="generatedDesign.imageUrl" target="_blank">View Full Design</a>
+      <div class="design-image">
+        <img [src]="generatedDesign.imageUrl" alt="Design Image" />
+      </div>
+    </div>
+
+    <div class="design-box bottom-left">
+      <p><strong>Benefits to the Environment:</strong> {{ environmentBenefits }}</p>
+    </div>
+
+    <div class="design-box bottom-right">
+      <p><strong>Cost Reduction Suggestions:</strong> {{ costReductionSuggestion }}</p>
+      <p><strong>Suggested Location:</strong> {{ locationSuggestion }}</p>
+    </div>
+  </div>
+
+
+  <div class="chat-ai-section">
+    <a routerLink="/bot" class="chat-ai-bubble">
+      <h3>Welcome to AI-powered Design Assistance!</h3>
+      <p>
+        Our AI assistant is here to help you navigate the design process for
+        your building projects. Whether you're unsure about the best building
+        type for your needs, need suggestions for sustainability, or have
+        questions about legal compliance, our AI is equipped to provide tailored
+        recommendations and advice based on your specific inputs.
+      </p>
+      <p>
+        Ask about any aspect of your building design and get real-time insights
+        to optimize your project. With our AI's ability to analyze environmental
+        factors, budget constraints, and legal requirements, you can make
+        informed decisions with ease. Start chatting with our AI now!
+      </p>
+      <button routerLink="/bot" class="chat-ai-button">Chat with AI</button>
+    </a>
+
+    <div class="ai-image">
+      <img src="/assets/ai.png" alt="AI Image">
+    </div>
+  </div>
+</div>

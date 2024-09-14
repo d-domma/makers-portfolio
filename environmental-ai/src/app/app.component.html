@@ -1,0 +1,72 @@
+<!--
+<header>
+  <div class="header-container">
+    <div class="logo">{{ title }}</div>
+    <nav>
+      <a routerLink="/">Home</a>
+      <a routerLink="/courses">Courses</a>
+      <a href="#">Login</a>
+      <a href="#">Sign up</a>
+      <a href="#">Forum</a>
+      <a href="#">Extra Help</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer>
+  <p>&copy; <span class="footer-year"></span> {{ title }}. All rights reserved.</p>
+</footer>
+-->
+<!--
+<header>
+  <div class="header-container">
+    <div class="logo">{{ title }}</div>
+    <nav>
+      <a routerLink="/">Home</a>
+      <a routerLink="/courses">Courses</a>
+      <a href="#">Login</a>
+      <a href="#">Sign up</a>
+      <a href="#">Forum</a>
+      <a href="#">Extra Help</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer>
+  <p>&copy; <span class="footer-year"></span> {{ title }}. All rights reserved.</p>
+</footer>
+-->
+<header>
+  <div class="header-container">
+    <div class="logo">
+      <img src="/assets/logo.png" alt="Finance Tracker Logo" class="logo-img">
+    </div>
+    <nav>
+      <a routerLink="/home">Home</a>
+      <a routerLink="/bot">Help</a>
+    </nav>
+    <div class="auth-buttons">
+      <a routerLink="/login">Login</a>
+      <a routerLink="/signup">Sign up</a>
+      <button *ngIf="isLoggedIn" (click)="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer>
+  <div class="footer-container">
+    <p>&copy; 2025 Finance Tracker. All rights reserved.</p>
+  </div>
+</footer>
