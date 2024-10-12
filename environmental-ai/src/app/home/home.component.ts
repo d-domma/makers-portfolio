@@ -35,6 +35,15 @@ export class HomeComponent {
 
   stateList = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
 
+  spots: { [key: string]: string } = {
+    Georgia: 'Midtown, Atlanta, Georgia',
+    California: 'Santa Monica, Los Angeles, California',
+    Texas: 'Downtown, Houston, Texas',
+    'New York': 'Manhattan, New York',
+    Florida: 'South Beach, Miami, Florida',
+    Illinois: 'The Loop, Chicago, Illinois'
+  };
+
   designMap: { [key: string]: { design: any } } = {
     '2-story-house': { design: this.pastDesigns[0] },
     '1-story-house': { design: this.pastDesigns[1] },
@@ -49,10 +58,11 @@ export class HomeComponent {
   onSubmit() {
     const picked = this.designMap[this.buildingType];
     this.generatedDesign = picked ? picked.design : this.pastDesigns[0];
-    this.location = this.state;
-    this.benefits = 'This ' + this.buildingType + ' is the sample for that type. Nothing about the site is looked up yet.';
-    this.environmentBenefits = 'No weather or map count in this version.';
-    this.costReductionSuggestion = 'You typed $' + this.cost + ' for ' + this.size + ' sq ft and ' + this.rooms + ' rooms.';
-    this.locationSuggestion = 'Suggested Location: ' + (this.state || 'pick a state') + '.';
+    const spot = this.spots[this.state] || ('Downtown, ' + (this.state || 'the state'));
+    this.location = spot;
+    this.benefits = 'The ' + this.buildingType + ' sample is the one linked above. The city is just from the short list, not from a map.';
+    this.environmentBenefits = 'No live weather yet. The environmental line is still a placeholder.';
+    this.costReductionSuggestion = '$' + this.cost + ' for ' + this.size + ' sq ft. That number is stored, not compared to anything.';
+    this.locationSuggestion = 'Suggested Location: ' + spot + '.';
   }
 }
