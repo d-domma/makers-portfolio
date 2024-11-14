@@ -35,15 +35,6 @@ export class HomeComponent {
 
   stateList = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
 
-  pins: { [key: string]: number[] } = {
-    Georgia: [33.749, -84.388],
-    California: [34.052, -118.244],
-    Texas: [29.76, -95.37],
-    'New York': [40.71, -74.01],
-    Florida: [25.77, -80.19],
-    Illinois: [41.88, -87.63]
-  };
-
   designMap: { [key: string]: { design: any } } = {
     '2-story-house': { design: this.pastDesigns[0] },
     '1-story-house': { design: this.pastDesigns[1] },
@@ -58,10 +49,26 @@ export class HomeComponent {
   async onSubmit() {
     const picked = this.designMap[this.buildingType];
     this.generatedDesign = picked ? picked.design : this.pastDesigns[0];
-    const pin = this.pins[this.state] || [33.749, -84.388];
+
+    let lat = 33.749;
+    let lon = -84.388;
+    let placeName = this.state || 'Georgia';
+    try {
+      const q = encodeURIComponent((this.state || 'Georgia') + ', United States');
+      const res = await fetch('/api/place?q=' + q + '&format=json&limit=1');
+      const hits = await res.json();
+      if (hits && hits[0] && hits[0].lat) {
+        lat = Number(hits[0].lat);
+        lon = Number(hits[0].lon);
+        placeName = hits[0].display_name || placeName;
+      }
+    } catch (err) {
+      placeName = (this.state || 'Georgia') + ' (nominatim missed)';
+    }
+
     let temp = 21, rain = 0, wind = 8;
     try {
-      const url = '/api/sky?latitude=' + pin[0] + '&longitude=' + pin[1] + '&current=temperature_2m,precipitation,wind_speed_10m&daily=precipitation_sum&forecast_days=1&timezone=auto';
+      const url = '/api/sky?latitude=' + lat + '&longitude=' + lon + '&current=temperature_2m,precipitation,wind_speed_10m&daily=precipitation_sum&forecast_days=1&timezone=auto';
       const res = await fetch(url);
       const sky = await res.json();
       const cur = sky.current || {};
@@ -74,11 +81,10 @@ export class HomeComponent {
       if (Number.isNaN(wind)) wind = 8;
     } catch (err) {}
 
-    const place = (this.state || 'Georgia') + ' (fixed pin)';
-    this.location = place;
-    this.benefits = 'Open-Meteo says ' + temp.toFixed(1) + ' C. The pin is hardcoded for a few states. Everyone else gets the Atlanta pin until nominatim is in.';
-    this.environmentBenefits = 'Rain today ' + rain.toFixed(1) + ' mm. Wind ' + wind.toFixed(1) + ' km/h. No map count yet.';
-    this.costReductionSuggestion = 'Still just your numbers: $' + this.cost + ', ' + this.size + ' sq ft, ' + this.rooms + ' rooms.';
-    this.locationSuggestion = 'Suggested Location: ' + place + '.';
+    this.location = placeName;
+    this.benefits = 'Nominatim put the pin on ' + placeName + '. Open-Meteo has ' + temp.toFixed(1) + ' C.';
+    this.environmentBenefits = rain.toFixed(1) + ' mm of rain and wind ' + wind.toFixed(1) + ' km/h. Parks are not counted yet.';
+    this.costReductionSuggestion = '$' + this.cost + ', ' + this.size + ' sq ft, ' + this.rooms + ' rooms. Not passed to a model.';
+    this.locationSuggestion = 'Suggested Location: ' + placeName + '.';
   }
 }
