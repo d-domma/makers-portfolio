@@ -50,21 +50,16 @@ export class HomeComponent {
     const picked = this.designMap[this.buildingType];
     this.generatedDesign = picked ? picked.design : this.pastDesigns[0];
 
-    let lat = 33.749;
-    let lon = -84.388;
-    let placeName = this.state || 'Georgia';
+    let lat = 33.749, lon = -84.388, placeName = this.state || 'Georgia';
     try {
       const q = encodeURIComponent((this.state || 'Georgia') + ', United States');
       const res = await fetch('/api/place?q=' + q + '&format=json&limit=1');
       const hits = await res.json();
       if (hits && hits[0] && hits[0].lat) {
-        lat = Number(hits[0].lat);
-        lon = Number(hits[0].lon);
+        lat = Number(hits[0].lat); lon = Number(hits[0].lon);
         placeName = hits[0].display_name || placeName;
       }
-    } catch (err) {
-      placeName = (this.state || 'Georgia') + ' (nominatim missed)';
-    }
+    } catch (err) {}
 
     let temp = 21, rain = 0, wind = 8;
     try {
@@ -76,15 +71,31 @@ export class HomeComponent {
       wind = Number(cur.wind_speed_10m);
       if (sky.daily && sky.daily.precipitation_sum && sky.daily.precipitation_sum.length) rain = Number(sky.daily.precipitation_sum[0]);
       else rain = Number(cur.precipitation || 0);
-      if (Number.isNaN(temp)) temp = 21;
-      if (Number.isNaN(rain)) rain = 0;
-      if (Number.isNaN(wind)) wind = 8;
+    } catch (err) {}
+
+    let parks = 0, woods = 0, buildings = 0;
+    try {
+      const parkQ = '[out:json][timeout:25];(way["leisure"="park"](around:1800,' + lat + ',' + lon + ');way["natural"="wood"](around:1800,' + lat + ',' + lon + '););out tags;';
+      const parkRes = await fetch('/api/ground', { method: 'POST', body: parkQ });
+      const parkJson = await parkRes.json();
+      const els = parkJson.elements || [];
+      for (let i = 0; i < els.length; i++) {
+        const tags = els[i].tags || {};
+        if (tags.leisure === 'park') parks++;
+        else if (tags.natural === 'wood') woods++;
+      }
+      const bldQ = '[out:json][timeout:25];way["building"](around:650,' + lat + ',' + lon + ');out count;';
+      const bldRes = await fetch('/api/ground', { method: 'POST', body: bldQ });
+      const bldJson = await bldRes.json();
+      const first = bldJson.elements && bldJson.elements[0];
+      const tags = first && first.tags ? first.tags : {};
+      buildings = Number(tags.ways || tags.total || 0);
     } catch (err) {}
 
     this.location = placeName;
-    this.benefits = 'Nominatim put the pin on ' + placeName + '. Open-Meteo has ' + temp.toFixed(1) + ' C.';
-    this.environmentBenefits = rain.toFixed(1) + ' mm of rain and wind ' + wind.toFixed(1) + ' km/h. Parks are not counted yet.';
-    this.costReductionSuggestion = '$' + this.cost + ', ' + this.size + ' sq ft, ' + this.rooms + ' rooms. Not passed to a model.';
+    this.benefits = 'Open-Meteo ' + temp.toFixed(1) + ' C, rain ' + rain.toFixed(1) + ' mm, wind ' + wind.toFixed(1) + ' km/h.';
+    this.environmentBenefits = 'Overpass: ' + parks + ' parks, ' + woods + ' woods in 1.8 km, ' + buildings + ' buildings in 650 m. The model is not called yet.';
+    this.costReductionSuggestion = '$' + this.cost + ' / ' + this.size + ' sq ft / ' + this.rooms + ' rooms.';
     this.locationSuggestion = 'Suggested Location: ' + placeName + '.';
   }
 }
