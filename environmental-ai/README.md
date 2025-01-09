@@ -13,6 +13,10 @@ version 10 points help at the language model. the dev server proxies /api/chat t
 
 rain in sites.csv is daily mm, not a yearly total. the first pass used yearly numbers and every site came back as storm once open-meteo returned something like 2 mm. k is 4. k=3 kept flipping the warm low-rain rows between shade and heat.
 
+searching the state name on nominatim returned the middle of the state, and overpass then counted zero parks. the query now sends a city name in that state and nominatim still supplies the lat and lon.
+
+temperature is stacked twice in the knn vector. a 17 c georgia reading was coming back as heat because the empty park count looked like the heat rows and the scaler was letting that beat a 20 degree gap.
+
 to run version 10, from the e-ai folder:
 
 python site_knn.py

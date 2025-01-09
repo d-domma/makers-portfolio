@@ -16,7 +16,9 @@ kinds = []
 with open(here / "sites.csv", newline="") as handle:
     reader = csv.DictReader(handle)
     for line in reader:
-        xrows.append([float(line[c]) for c in cols])
+        row = [float(line[c]) for c in cols]
+        row.append(row[0])
+        xrows.append(row)
         kinds.append(line["kind"].strip())
 
 block = np.array(xrows, dtype=float)
@@ -50,6 +52,7 @@ class PickHandler(BaseHTTPRequestHandler):
                 vec.append(float(got.get(key, 0) or 0))
             except (TypeError, ValueError):
                 vec.append(0.0)
+        vec.append(vec[0])
 
         point = scaler.transform(np.array([vec], dtype=float))
         kind = model.predict(point)[0]
