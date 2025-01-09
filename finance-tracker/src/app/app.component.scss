@@ -1,0 +1,247 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Poppins:wght@700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  color: #333;
+  background-color: #f9fafc;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+
+header {
+  background-color: #000000;
+  border-bottom: 1px solid #000000;
+  padding: 1.5rem 0rem;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1800px;
+    margin: auto;
+    padding: 0 2rem;
+    color: white;
+
+    .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      a {
+        font-size: 1.3rem;
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        text-decoration: none;
+        transition: color 0.3s, border-bottom 0.3s;
+        padding-bottom: 0.35rem;
+
+        &:hover {
+          color: #5a1b8b;
+          border-bottom: 2px solid #5a1b8b;
+        }
+      }
+    }
+
+    .auth-buttons {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      a {
+        font-size: 1.3rem;
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.3s, border-bottom 0.3s;
+        padding-bottom: 0.35rem;
+
+        &:hover {
+          color: #5a1b8b;
+          border-bottom: 2px solid #5a1b8b;
+        }
+      }
+    }
+  }
+
+  &.sticky {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+
+main {
+  flex-grow: 1;
+  max-width: 2000px;
+  width: 100%;
+  margin: auto;
+  padding: 0rem;
+}
+
+
+footer {
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  background: #000000;
+  color: #ffffff;
+  margin-top: auto;
+  border-radius: 10px 10px 0 0;
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+
+.form-container {
+  max-width: 420px;
+  margin: 4rem auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+  }
+}
+
+h2 {
+  font-size: 1.8rem;
+  color: #264653;
+  margin-bottom: 1.8rem;
+  text-align: center;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"] {
+  width: 100%;
+  padding: 1rem;
+  margin: 1rem 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+
+  &:focus {
+    border-color: #2a9d8f;
+    outline: none;
+    box-shadow: 0 0 8px rgba(42, 157, 143, 0.3);
+  }
+}
+
+
+button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: color 0.3s, border-bottom 0.3s;
+  padding: 0.35rem 0;
+  text-decoration: none;
+
+  &:hover {
+    color: #5a1b8b;
+    border-bottom: 2px solid #5a1b8b;
+  }
+}
+
+
+.form-footer {
+  text-align: center;
+  margin-top: 1rem;
+
+  a {
+    color: #2a9d8f;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: color 0.3s;
+
+    &:hover {
+      color: #e76f51;
+    }
+  }
+}
+
+
+@media (max-width: 768px) {
+  header .header-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem 1.5rem;
+
+    nav {
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .auth-buttons {
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+
+  .form-container {
+    width: 90%;
+    padding: 1.5rem;
+  }
+
+  button {
+    padding: 0.8rem 2rem;
+  }
+
+  .auth-buttons a {
+    width: 70%;
+    padding: 0.6rem 2rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    img, .logo-img {
+      height: 10px !important;
+      width: auto !important;
+      max-width: 30px !important;
+      object-fit: contain;
+    }
+  }
+}
