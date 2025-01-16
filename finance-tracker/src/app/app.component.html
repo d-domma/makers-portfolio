@@ -6,6 +6,11 @@
     <nav>
       <a routerLink="/home">Home</a>
     </nav>
+    <div class="auth-buttons">
+      <a routerLink="/login">Login</a>
+      <a routerLink="/signup">Sign up</a>
+      <button *ngIf="isLoggedIn" (click)="logout()">Logout</button>
+    </div>
   </div>
 </header>
 
