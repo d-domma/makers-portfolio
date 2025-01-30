@@ -39,7 +39,7 @@ export class LoginComponent {
         ];
         box.setItem(key, JSON.stringify(seed));
       }
-      this.router.navigate(['/home']);
+      this.router.navigate(['/organizer']);
     } else {
       this.errorMessage = 'Invalid username or password.';
     }

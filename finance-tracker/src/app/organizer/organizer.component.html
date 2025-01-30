@@ -1,0 +1,141 @@
+
+<div class="organizer">
+  <h1>Organizer</h1>
+
+  <div *ngIf="isLoggedIn">
+    <h3>Welcome, {{ currentUser }}!</h3>
+    <button (click)="logout()">Logout</button>
+  </div>
+
+  <section class="transaction-section">
+    <h2>Transactions</h2>
+    <form (submit)="addTransaction()">
+      <input type="text" placeholder="Description" [(ngModel)]="newTransaction.description" name="description" required />
+      <input type="number" placeholder="Amount" [(ngModel)]="newTransaction.amount" name="amount" required />
+      <select [(ngModel)]="newTransaction.category" name="category" required>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <input type="date" [(ngModel)]="newTransaction.date" name="date" required />
+      <button type="submit">Add Transaction</button>
+    </form>
+
+    <div class="balance">
+      <h3>Current Balance: {{ calculateBalance() | currency }}</h3>
+    </div>
+
+    <div class="search-bar">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Search transactions by description..."
+        name="search"
+      />
+    </div>
+
+    <table class="transaction-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Amount</th>
+          <th>Category</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let transaction of filteredTransactions()">
+          <td>{{ transaction.description }}</td>
+          <td>{{ transaction.amount | currency }}</td>
+          <td>{{ transaction.category }}</td>
+          <td>{{ transaction.date }}</td>
+          <td>
+            <button (click)="editTransaction(transaction)">Edit</button>
+            <button (click)="deleteTransaction(transaction)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  <section class="task-section">
+    <h2>Tasks</h2>
+    <form (submit)="addTask()">
+      <input type="text" placeholder="New Task" [(ngModel)]="newTask" name="task" required />
+      <button type="submit">Add Task</button>
+    </form>
+
+    <ul class="task-list">
+      <li *ngFor="let task of tasks">
+        <input type="checkbox" [(ngModel)]="task.completed" />
+        <span [ngClass]="{ completed: task.completed }">{{ task.name }}</span>
+        <button (click)="editTask(task)">Edit</button>
+      </li>
+    </ul>
+  </section>
+
+  <section class="calendar-section">
+    <div class="calendar-header">
+      <button (click)="prevMonth()">&lt;</button>
+      <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
+      <button (click)="nextMonth()">&gt;</button>
+    </div>
+    <div class="modal" *ngIf="modalOpen">
+      <div class="modal-content">
+        <h3>Add Notes for {{ selectedDate }}</h3>
+        <textarea [(ngModel)]="noteContent" placeholder="Enter notes here..."></textarea>
+        <button (click)="saveNote()">Save</button>
+        <button (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+    
+  
+    <div class="calendar-grid">
+      <div class="day-name" *ngFor="let day of dayNames">{{ day }}</div>
+
+      <div
+  class="calendar-day"
+  *ngFor="let i of daysInMonth; let index = index"
+  [class.other-month]="index < firstDay || index >= firstDay + daysInMonth.length"
+  (click)="openDayModal(i)"
+>
+  <span>{{ i }}</span>
+  
+  <div class="notes" *ngIf="notes[formatDate(currentYear, currentMonth, i)]">
+    <strong>{{ notes[formatDate(currentYear, currentMonth, i)] }}</strong>
+  </div>
+</div>
+
+    </div>
+  </section>
+  
+
+  <div class="modal-overlay" *ngIf="modalOpen">
+    <div class="modal-content">
+      <h3>Add Notes for {{ selectedDate }}</h3>
+      <textarea [(ngModel)]="noteContent" placeholder="Enter notes here..."></textarea>
+      <div class="modal-buttons">
+        <button (click)="saveNote()">Save</button>
+        <button (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="chatbot-container">
+    <div class="chatbot-icon" (click)="toggleChatbot()">
+      <img [src]="chatbotOpen ? 'assets/imtwo.png' : 'assets/imone.png'" alt="Need Help?" />
+      
+      <div *ngIf="!chatbotOpen" class="chatbot-text-overlay">Need Help? Click Here</div>
+    </div>
+    <div class="chatbot-bubble" *ngIf="chatbotOpen">
+      <div class="chatbot-header">
+        <h4>Personal Assistant</h4> 
+        <button class="close-button" (click)="toggleChatbot()">&times;</button> 
+      </div>
+      <div class="chatbot-messages">
+        <div *ngFor="let msg of chatMessages" [class.user-message]="msg.sender === 'user'" [class.bot-message]="msg.sender === 'bot'">
+          {{ msg.text }}
+        </div>
+      </div>
+      <input type="text" [(ngModel)]="userInput" (keyup.enter)="sendMessage()" placeholder="Ask me anything..." />
+    </div>
+  </div>

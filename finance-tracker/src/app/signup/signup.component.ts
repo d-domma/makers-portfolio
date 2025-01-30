@@ -90,11 +90,11 @@ export class SignUpComponent {
     box.setItem(`${this.username}_transactions`, emptyList);
 
     this.errorMessage = '';
-    this.successMessage = 'Sign-up successful! Redirecting you home...';
+    this.successMessage = 'Sign-up successful! Redirecting to your organizer...';
 
     const wait = 1500;
     setTimeout(() => {
-      this.router.navigate(['/home']);
+      this.router.navigate(['/organizer']);
     }, wait);
   }
 }
