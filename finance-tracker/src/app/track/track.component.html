@@ -1,0 +1,51 @@
+<div class="track">
+  <h1>Track Finances</h1>
+
+  
+  <div class="summary-container">
+    <div class="summary-content">
+      <h2>Summary</h2>
+      <select [(ngModel)]="filterPeriod" name="filterPeriod">
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+      <button class="generate-summary-btn" (click)="generateSummary()">Generate Summary</button>
+
+      
+      <div *ngIf="summaryGenerated">
+        <h3>Summary Generated:</h3>
+        <p class="generated-text">Income - {{ summaryIncome | currency }}</p>
+        <p class="generated-text">Expenses - {{ summaryExpenses | currency }}</p>
+        <p class="generated-text">Period - {{ filterPeriod | uppercase }}</p>
+      </div>
+
+      <div class="category-summary">
+        <h3>Spending Patterns</h3>
+        <ul>
+          <li *ngFor="let category of categoryKeys" class="generated-text">
+            {{ category }}: {{ categories[category] | currency }}
+          </li>
+        </ul>
+
+        <p *ngIf="spendingPatternWarning" class="generated-text">{{ spendingPatternWarning }}</p>
+      </div>
+    </div>
+    
+    
+    <div class="summary-image">
+      <img src="assets/track.jpeg" alt="Summary Image">
+    </div>
+  </div>
+
+  
+  <div class="reports-container">
+
+    <div class="reports-content">
+      <h2>Reports</h2>
+      <ul>
+        <li *ngFor="let report of reports" class="generated-text">{{ report }}</li>
+      </ul>
+      <button (click)="clearReports()">Clear Reports</button>
+    </div>
+  </div>
+</div>

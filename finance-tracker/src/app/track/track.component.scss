@@ -1,0 +1,250 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&family=Roboto:wght@400;500;700&display=swap');
+
+
+$primary-color: #5a1b8b;  
+$secondary-color: #84047c;  
+$tertiary-color: #03375a;  
+$background-color: black;  
+$text-color: white;  
+$button-bg-color: $primary-color;  
+$button-hover-color: #9b59b6;  
+$border-color: #444;  
+$box-bg-color: #1a1a1a;  
+$hover-bg-color: #222;  
+$input-bg-color: #333; 
+$input-focus-bg-color: #444; 
+
+
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: $background-color;
+  color: $text-color;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+}
+
+
+.track {
+  width: 80%; 
+  width: 1208px; 
+  padding: 40px 20px;
+  background-color: $background-color;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-in-out;
+  margin-top: 0px;  
+  margin-bottom: 0px;
+  border: 1px solid $border-color;
+  min-height: calc(100vh - 200px); 
+
+  
+  h1, h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 48px;
+    font-weight: 600;
+    color: $primary-color;
+    text-align: center;
+    margin-bottom: 30px;
+    transition: color 0.3s ease;
+    text-transform: uppercase;
+  }
+
+  h1:hover, h2:hover {
+    color: $secondary-color;
+    cursor: pointer;
+  }
+
+  .generated-text {
+    color: #ffffff; 
+    font-weight: bold;
+    font-size: 20px;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5); 
+    margin-top: 15px;
+  }
+
+  
+  form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+
+    input, select, button {
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid $border-color;
+      background-color: $box-bg-color;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+    }
+
+    input:focus, select:focus {
+      background-color: $input-focus-bg-color;
+      border-color: $primary-color;
+    }
+
+    
+    .generate-summary-btn {
+      background-color: $button-bg-color;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 20px 50px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      font-size: 22px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background-color: $button-hover-color;
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(255, 255, 255, 0.15);
+      }
+
+      &:active {
+        background-color: darken($primary-color, 20%);
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+      }
+    }
+  }
+
+  
+  .summary-container, .reports-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+    margin: 40px auto;
+    background: $box-bg-color;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.1);
+    width: 90%;
+  }
+
+  
+  .summary-content, .reports-content {
+    flex: 1;
+    text-align: left;
+    padding: 20px;
+  }
+
+  .summary-content h3, .reports-content h3 {
+    font-size: 24px;
+    color: $secondary-color;
+    margin-bottom: 15px;
+  }
+
+  
+  .image-box {
+    flex: 1;
+    background-color: $box-bg-color;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  
+  .reports ul {
+    list-style: none;
+    padding: 0;
+
+    li {
+      background: $hover-bg-color;
+      padding: 25px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid $primary-color;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: darken($hover-bg-color, 5%);
+        box-shadow: 0 6px 15px rgba(255, 255, 255, 0.1);
+      }
+
+      .report-title {
+        font-weight: 600;
+        font-size: 20px;
+        color: $text-color;
+      }
+
+      .report-status {
+        font-size: 18px;
+        color: #ccc;
+      }
+    }
+  }
+
+  
+  button {
+    background-color: $secondary-color;
+    color: white;
+    font-weight: 600;
+    border: none;
+    padding: 20px 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: 30px;
+
+    &:hover {
+      background-color: darken($secondary-color, 10%);
+    }
+  }
+}
+
+
+@media screen and (max-width: 768px) {
+  .summary-container, .reports-container {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .summary-content, .reports-content {
+    text-align: center;
+  }
+
+  .image-box {
+    max-width: 100%;
+  }
+
+  
+  .image-box.tech-image {
+    max-width: 70%;
+    img {
+      max-width: 25%;
+    }
+  }
+}
