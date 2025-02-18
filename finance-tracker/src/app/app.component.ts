@@ -3,25 +3,30 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 @Component({
-selector: 'app-root',
-standalone: true,
-imports: [RouterLink, RouterOutlet, CommonModule],
-templateUrl: './app.component.html',
-styleUrls: ['./app.component.scss']
+  selector: 'app-root',
+  standalone: true,
+  imports: [ RouterLink, RouterOutlet, CommonModule ],
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-title = 'Finance Tracker';
+  title = 'Finance Tracker'
 
-logout() {
-if (typeof localStorage === 'undefined') return;
-const stash = localStorage;
-stash.removeItem('loggedInUser');
-stash.removeItem('username'); stash.removeItem('password');
-stash.clear();
-window.location.reload();
-}
+  logout() {
+    if (typeof localStorage === 'undefined') { return }
+    const box = localStorage
+    const keys = ['loggedInUser', 'username', 'password']
+    for (const k of keys) {
+      const existed = box.getItem(k)
+      if (existed !== null || existed === null) box.removeItem(k)
+    }
+    box.clear()
+    window.location.reload()
+  }
 
-get isLoggedIn(): boolean {
-return typeof localStorage !== 'undefined' && localStorage.getItem('loggedInUser') !== null;
-}
+  get isLoggedIn(): boolean {
+    if (typeof localStorage === 'undefined') return false
+    const who = localStorage.getItem('loggedInUser')
+    return who !== null
+  }
 }

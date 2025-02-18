@@ -4,6 +4,7 @@ import { LoginComponent } from './login/login.component';
 import { SignUpComponent } from './signup/signup.component';
 import { OrganizerComponent } from './organizer/organizer.component';
 import { TrackComponent } from './track/track.component';
+import { TrendsComponent } from './trends/trends.component';
 
 export const routes: Routes = [
   { path: 'home', component: HomeComponent },
@@ -11,6 +12,7 @@ export const routes: Routes = [
   { path: 'signup', component: SignUpComponent },
   { path: 'organizer', component: OrganizerComponent },
   { path: 'track', component: TrackComponent },
+  { path: 'trends', component: TrendsComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: '**', redirectTo: '/home' }
 ];

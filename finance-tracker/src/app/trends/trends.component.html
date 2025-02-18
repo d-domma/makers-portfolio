@@ -1,0 +1,67 @@
+<div class="trends-container">
+  
+  <section class="section stocks">
+    <h2>Latest Stock Trends</h2>
+    <p *ngIf="stockStatus">{{ stockStatus }}</p>
+    <table class="stocks-table">
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Symbol</th>
+          <th>Price</th>
+          <th>Change (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let stock of stocks">
+          <td>{{ stock.company }}</td>
+          <td>{{ stock.symbol }}</td>
+          <td>${{ stock.price.toFixed(2) }}</td>
+          <td [class.positive]="stock.change > 0" [class.negative]="stock.change < 0">
+            {{ stock.change > 0 ? '+' : '' }}{{ stock.change }}%
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  
+  <section class="section news">
+    <h2>Latest Business News</h2>
+    <div class="news-item" *ngFor="let article of news">
+      <h3>{{ article.title }}</h3>
+      <p>{{ article.summary }}</p>
+      <a [href]="article.link" target="_blank">Read More</a>
+    </div>
+  </section>
+
+  
+  <section class="section updates">
+    <h2>Major Business Updates</h2>
+    <ul>
+      <li *ngFor="let update of businessUpdates">
+        <strong>{{ update.title }}:</strong> {{ update.detail }}
+      </li>
+    </ul>
+  </section>
+
+  
+  <section class="section tax-rates">
+    <h2>Approximated Tax Rates</h2>
+    <table class="tax-rates-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Rate (%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let rate of taxRates">
+          <td>{{ rate.category }}</td>
+          <td>{{ rate.rate }}%</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
