@@ -36,6 +36,13 @@ const talkBits = {
   }
 };
 
+const sayBits = {
+  target: "https://text.pollinations.ai",
+  secure: true,
+  changeOrigin: true,
+  pathRewrite: { "^/api/say": "" }
+};
+
 const knnBits = {
   target: "http://127.0.0.1:5055",
   secure: false,
@@ -48,5 +55,6 @@ module.exports = {
   "/api/place": placeBits,
   "/api/ground": groundBits,
   "/api/chat": talkBits,
+  "/api/say": sayBits,
   "/api/pick": knnBits
 };
