@@ -3,12 +3,33 @@
     <div class="logo">
       <img src="/assets/logo1.png" alt="Finance Tracker Logo" class="logo-img">
     </div>
-    <nav>
+
+    
+    <nav *ngIf="!isKidsMode && !isParentMode">
       <a routerLink="/home">Home</a>
       <a routerLink="/organizer">Organizer</a>
       <a routerLink="/track">Track</a>
+      <a routerLink="/bot">Help</a>
       <a routerLink="/trends">Trends</a>
+      <a routerLink="/kids" (click)="setKidsMode()">Kids Mode</a>
     </nav>
+
+    
+    <nav *ngIf="isKidsMode">
+      <a routerLink="/parent" (click)="setParentMode()">Parent Mode</a>
+    </nav>
+
+    
+    <nav *ngIf="isParentMode">
+      
+      <a routerLink="/home">Home</a>
+      <a routerLink="/organizer" (click)="resetToDefault()">Organizer</a>
+      <a routerLink="/track">Track</a>
+      <a routerLink="/bot">Help</a>
+      <a routerLink="/trends">Trends</a>
+      <a routerLink="/kids" (click)="setKidsMode()">Kids Mode</a>
+    </nav>
+
     <div class="auth-buttons">
       <a routerLink="/login">Login</a>
       <a routerLink="/signup">Sign up</a>

@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.kids-mode {
+  font-family: 'Poppins', sans-serif;
+  background-color: black;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+
+.balance {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff66b2; 
+  padding: 20px;
+  border: 2px solid #5a1b8b; 
+  width: 50%;
+  margin: 20px auto;
+  border-radius: 10px;
+}
+
+
+.product-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 30px 0;
+}
+
+.product-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.product-box {
+  background: #5a1b8b;
+  padding: 15px;
+  margin: 10px;
+  border-radius: 8px;
+  color: white;
+  text-align: center;
+  min-width: 200px;
+  transition: transform 0.3s ease-in-out;
+  border: 2px solid #ff66b2; 
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+
+  img {
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+  }
+
+  h3 {
+    margin: 10px 0;
+  }
+
+  p {
+    margin-bottom: 10px;
+  }
+
+  button {
+    background: #ff66b2;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #ff3385;
+    }
+  }
+}
+
+
+.objects-table {
+  margin-top: 40px;
+
+  h2 {
+    color: #ff66b2;
+  }
+
+  table {
+    width: 50%;
+    margin: 0 auto;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    border: 1px solid #5a1b8b;
+    padding: 10px;
+  }
+
+  th {
+    background: #5a1b8b;
+  }
+}
+
+
+.task-section {
+  margin-top: 50px;
+
+  h2 {
+    color: #ff66b2;
+  }
+}
+
+.task-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.task-box {
+  background: #5a1b8b;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  width: 200px;
+  border: 2px solid #ff66b2; 
+
+  h3 {
+    margin-bottom: 10px;
+  }
+
+  p {
+    margin-bottom: 10px;
+  }
+
+  button {
+    background: #ff66b2;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s;
+
+    &:hover {
+      background: #ff3385;
+    }
+
+    &:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+  }
+}

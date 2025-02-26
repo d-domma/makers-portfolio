@@ -1,0 +1,51 @@
+<div class="forum-container">
+  
+<div class="bot-container">
+  <div class="forum-container">
+    
+    <div class="sidebar">
+      <div class="faq-header" (click)="toggleFAQ()">
+        <h2>Frequently Asked Questions</h2>
+      </div>
+      <ul id="faqList" class="faq-list">
+        <li (click)="goToFAQPage('/faq/post-creation')">How to create a post?</li>
+        <li (click)="goToFAQPage('/faq/delete-comment')">How to delete a comment?</li>
+        <li (click)="goToFAQPage('/faq/forum-rules')">What are the forum rules?</li>
+      </ul>
+    </div>
+
+    
+    <div class="main-content">
+      
+      <div class="top-section">
+        <input type="text" class="search-bar" placeholder="Search...">
+        <div class="profile-section">
+          <img src="assets/john.jpg" alt="Profile Image" class="profile-pic">
+          <div class="profile-info">
+            <h3>John Doe</h3>
+            <p>Passionate Developer & Tech Enthusiast</p>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="chat-container">
+        <div class="chat-section" id="chatSection">
+          <div *ngFor="let message of messages" class="message-card" [ngStyle]="{'background-color': message.bgColor}">
+            <div class="message-header">
+              <img [src]="message.profilePic" alt="{{ message.username }}'s Profile Picture" class="user-pic">
+              <h4>{{ message.username }}</h4>
+            </div>
+            <p>{{ message.text }}</p>
+          </div>
+        </div>        
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="chat-input">
+    <input type="text" id="userMessage" placeholder="Type a message..." (keyup.enter)="sendMessage()">
+    <button (click)="sendMessage()">Send</button>
+  </div>
+</div>

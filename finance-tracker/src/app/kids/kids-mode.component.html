@@ -1,0 +1,52 @@
+<div class="kids-mode">
+  
+  <div class="balance">
+    <h1>Current Balance: ${{ balance }}</h1>
+  </div>
+
+  
+  <div class="product-section">
+    <h2>Products</h2>
+    <div class="product-container">
+      
+      <div *ngFor="let product of products" class="product-box">
+        <img [src]="product.image" [alt]="product.name">
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.description }}</p>
+        <p>Price: ${{ product.price }}</p>
+        <button (click)="buyProduct(product)">Buy Now</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="objects-table">
+    <h2>Objects You Have</h2>
+    <table>
+      <tr>
+        <th>Item</th>
+        <th>Price</th>
+      </tr>
+      <tr *ngFor="let item of purchasedItems">
+        <td>{{ item.name }}</td>
+        <td>${{ item.price }}</td>
+      </tr>
+    </table>
+  </div>
+
+  
+  <div class="task-section">
+    <h2>Tasks to Earn Money</h2>
+    <div class="task-container">
+      
+      <div *ngFor="let task of tasks" class="task-box">
+        <h3>{{ task.name }}</h3>
+        <p>Reward: ${{ task.reward }}</p>
+        <button (click)="startTask(task)" [disabled]="task.inProgress">
+          {{ task.inProgress ? 'Task in Progress...' : 'Start Task' }}
+        </button>
+        <p *ngIf="task.inProgress">Time remaining: {{ task.timeRemaining }} seconds</p>
+      </div>
+    </div>
+  </div>
+</div>
