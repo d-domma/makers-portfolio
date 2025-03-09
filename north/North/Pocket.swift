@@ -1,0 +1,201 @@
+import SwiftUI
+import CoreLocation
+
+struct Person: Identifiable, Codable, Equatable {
+    var id: UUID = UUID()
+    var name: String
+    var phone: String
+}
+
+struct Pin: Identifiable {
+    var id = UUID()
+    var lat: Double
+    var lon: Double
+    var band: String
+    var title: String
+    var detail: String
+    var coord: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+}
+
+struct Reg: Codable {
+    var name: String
+    var addr: String
+    var band: String
+    var detail: String
+}
+
+@MainActor
+final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
+    let manager = CLLocationManager()
+    let square = CLLocationCoordinate2D(latitude: 34.2074, longitude: -84.1402)
+
+    @Published var tab = 0
+    @Published var dark = false
+    @Published var people: [Person] = []
+    @Published var pins: [Pin] = []
+    @Published var filter = "all"
+    @Published var span = 0.055
+    @Published var pathSpan = 0.0
+    @Published var spot = CLLocationCoordinate2D(latitude: 34.2074, longitude: -84.1402)
+    @Published var heading = 42.0
+    @Published var fixDenied = false
+    @Published var route: [CLLocationCoordinate2D] = []
+    @Published var destName = "Home"
+    @Published var miles = 1.2
+    @Published var minutes = 15
+    @Published var walked = 0.4
+    @Published var safe = 92
+    @Published var routeNotes: [String] = []
+    @Published var checkEnd: Date? = nil
+    @Published var meet = ""
+    @Published var going = ""
+    @Published var showAdd = false
+    @Published var showScam = false
+    @Published var scamText = ""
+    @Published var scamScore = -1
+    @Published var scamBits: [String] = []
+    @Published var tick = Date()
+    @Published var picked: Pin? = nil
+    @Published var outgoing: OutNote? = nil
+
+    var home = CLLocationCoordinate2D(latitude: 34.2195, longitude: -84.1220)
+    var lastGood: CLLocation?
+    var lastSpeed = 0.0
+    var offenders: [Pin] = []
+    var ambers: [Pin] = []
+    var usingLive = false
+    var spots: [String: (Double, Double)] = [:]
+    var geoBusy = false
+    var routeBusy = false
+    var routeIsLive = false
+    var routedFrom = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    var lastGoingRouted = ""
+
+    var shade: Shade { .day }
+
+    var trackLine: String {
+        if fixDenied { return "Location off" }
+        return "Location tracking active"
+    }
+
+    var shown: [Pin] {
+        let src = pins
+        if filter == "amber" { return src.filter { $0.band == "amber" } }
+        if filter == "off" { return src.filter { $0.band != "amber" } }
+        return src
+    }
+
+    override init() {
+        super.init()
+        pins = Pocket.starter()
+        route = Pocket.starterRoute()
+        people = Pocket.seedPeople()
+    }
+
+    func boot() {
+    }
+
+
+
+
+
+
+
+    func dial() {
+    }
+
+    func held() {
+    }
+
+    func askAdd() {
+    }
+
+    func addPerson(_ name: String, _ phone: String) {
+    }
+
+    func dropPerson(_ id: UUID) {
+    }
+
+    func setDark(_ on: Bool) {
+        dark = on
+    }
+
+    func keepNote() {
+    }
+
+    func startCheck() {
+    }
+
+    func endCheck() {
+    }
+
+    func pokeCheck() {
+    }
+
+    func scan() {
+    }
+
+    func scoreScam() {
+    }
+
+    func homeFromPress() {
+    }
+
+    func maybeRoute(force: Bool) {
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    static func seedPeople() -> [Person] {
+        [
+            Person(name: "Mom", phone: "+1 (555) 123-4567"),
+            Person(name: "Best Friend", phone: "+1 (555) 987-6543"),
+            Person(name: "Partner", phone: "+1 (555) 246-8135"),
+        ]
+    }
+
+    static func starter() -> [Pin] {
+        let rows: [(Double, Double, String, String)] = [
+            (34.2228, -84.1479, "high", "High Risk Offender"),
+            (34.2184, -84.1402, "amber", "Amber Alert"),
+            (34.2162, -84.1325, "low", "Low Risk Offender"),
+            (34.2074, -84.1270, "high", "High Risk Offender"),
+            (34.1997, -84.1303, "mid", "Medium Risk Offender"),
+            (34.1964, -84.1468, "mid", "Medium Risk Offender"),
+            (34.1952, -84.1369, "amber", "Amber Alert"),
+        ]
+        return rows.map { Pin(lat: $0.0, lon: $0.1, band: $0.2, title: $0.3, detail: $0.3) }
+    }
+
+    static func starterRoute() -> [CLLocationCoordinate2D] {
+        [
+            CLLocationCoordinate2D(latitude: 34.2074, longitude: -84.1402),
+            CLLocationCoordinate2D(latitude: 34.2118, longitude: -84.1365),
+            CLLocationCoordinate2D(latitude: 34.2146, longitude: -84.1338),
+            CLLocationCoordinate2D(latitude: 34.2132, longitude: -84.1295),
+            CLLocationCoordinate2D(latitude: 34.2168, longitude: -84.1258),
+            CLLocationCoordinate2D(latitude: 34.2195, longitude: -84.1220),
+        ]
+    }
+
+
+}
