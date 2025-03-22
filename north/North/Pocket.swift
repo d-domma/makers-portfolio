@@ -95,13 +95,69 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func boot() {
+        startFix()
     }
 
+    func startFix() {
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        manager.distanceFilter = 8
+        manager.headingFilter = 8
+        manager.activityType = .otherNavigation
+        manager.requestWhenInUseAuthorization()
+        manager.startUpdatingLocation()
+        manager.startUpdatingHeading()
+    }
 
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locs: [CLLocation]) {
+        let loc = locs.last
+        Task { @MainActor in
+            self.take(loc)
+        }
+    }
 
+    nonisolated func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        let acc = newHeading.headingAccuracy
+        let raw = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
+        Task { @MainActor in
+            self.takeHeading(raw, acc)
+        }
+    }
 
+    nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        let status = manager.authorizationStatus
+        Task { @MainActor in
+            self.fixDenied = status == .denied || status == .restricted
+        }
+    }
 
+    func take(_ loc: CLLocation?) {
+        guard let loc else { return }
+        if loc.horizontalAccuracy < 0 { return }
+        if let prev = lastGood {
+            if loc.horizontalAccuracy > 90 && prev.horizontalAccuracy < 70 { return }
+            if loc.horizontalAccuracy > prev.horizontalAccuracy + 25 && loc.horizontalAccuracy > 45 {
+                return
+            }
+        }
+        lastGood = loc
+        spot = loc.coordinate
+        lastSpeed = loc.speed
+        if loc.course >= 0 && loc.speed > 0.8 {
+            heading = loc.course
+        }
+    }
 
+    func takeHeading(_ raw: Double, _ acc: Double) {
+        if acc < 0 || acc > 45 { return }
+        if lastSpeed > 0.8 { return }
+        var diff = raw - heading
+        while diff > 180 { diff -= 360 }
+        while diff < -180 { diff += 360 }
+        heading = heading + diff * 0.35
+        if heading < 0 { heading += 360 }
+        if heading >= 360 { heading -= 360 }
+    }
 
     func dial() {
     }
