@@ -1,5 +1,7 @@
 import SwiftUI
 import CoreLocation
+import UserNotifications
+import MessageUI
 
 struct Person: Identifiable, Codable, Equatable {
     var id: UUID = UUID()
@@ -160,9 +162,17 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func dial() {
+        if let url = URL(string: "tel://911") {
+            UIApplication.shared.open(url)
+        }
     }
 
     func held() {
+        let body = "North alert. I need help. " + String(format: "%.5f, %.5f", spot.latitude, spot.longitude)
+        ping("Emergency alert", body, after: nil)
+        if MFMessageComposeViewController.canSendText() {
+            outgoing = OutNote(body: body)
+        }
     }
 
     func askAdd() {
@@ -212,6 +222,20 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 
 
+    func ping(_ title: String, _ body: String, after: TimeInterval?) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { ok, _ in
+            if !ok { return }
+            let note = UNMutableNotificationContent()
+            note.title = title
+            note.body = body
+            var trigger: UNNotificationTrigger? = nil
+            if let after, after > 1 {
+                trigger = UNTimeIntervalNotificationTrigger(timeInterval: after, repeats: false)
+            }
+            let req = UNNotificationRequest(identifier: title, content: note, trigger: trigger)
+            UNUserNotificationCenter.current().add(req)
+        }
+    }
 
 
 
