@@ -75,7 +75,7 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     var routedFrom = CLLocationCoordinate2D(latitude: 0, longitude: 0)
     var lastGoingRouted = ""
 
-    var shade: Shade { .day }
+    var shade: Shade { dark ? .night : .day }
 
     var trackLine: String {
         if fixDenied { return "Location off" }
@@ -98,6 +98,10 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     func boot() {
         startFix()
+        loadPeople()
+        if UserDefaults.standard.object(forKey: "north.dark") != nil {
+            dark = UserDefaults.standard.bool(forKey: "north.dark")
+        }
     }
 
     func startFix() {
@@ -175,17 +179,24 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
 
-    func askAdd() {
-    }
+    func askAdd() { showAdd = true }
 
     func addPerson(_ name: String, _ phone: String) {
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if n.isEmpty { return }
+        let p = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+        people.append(Person(name: n, phone: p))
+        savePeople()
     }
 
     func dropPerson(_ id: UUID) {
+        people = people.filter { $0.id != id }
+        savePeople()
     }
 
     func setDark(_ on: Bool) {
         dark = on
+        UserDefaults.standard.set(on, forKey: "north.dark")
     }
 
     func keepNote() {
@@ -243,7 +254,22 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 
 
+    func loadPeople() {
+        if let data = UserDefaults.standard.data(forKey: "north.people"),
+           let list = try? JSONDecoder().decode([Person].self, from: data),
+           !list.isEmpty {
+            people = list
+            return
+        }
+        people = Pocket.seedPeople()
+        savePeople()
+    }
 
+    func savePeople() {
+        if let data = try? JSONEncoder().encode(people) {
+            UserDefaults.standard.set(data, forKey: "north.people")
+        }
+    }
 
     static func seedPeople() -> [Person] {
         [
