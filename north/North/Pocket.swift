@@ -102,6 +102,7 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         if UserDefaults.standard.object(forKey: "north.dark") != nil {
             dark = UserDefaults.standard.bool(forKey: "north.dark")
         }
+        Task { await pullRegistry() }
     }
 
     func startFix() {
@@ -226,6 +227,17 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 
 
+    func pullRegistry() async {
+        guard let url = URL(string: "https://state.sor.gbi.ga.gov/SORT_PUBLIC/sor.csv") else { return }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 45
+        guard let (data, resp) = try? await URLSession.shared.data(for: req) else { return }
+        if let http = resp as? HTTPURLResponse, http.statusCode != 200 { return }
+        let text = String(decoding: data, as: UTF8.self)
+        let rows = await Task.detached { Pocket.rowsFrom(text) }.value
+        if rows.isEmpty { return }
+        saveRowCache(rows)
+    }
 
 
 
@@ -249,10 +261,18 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
 
+    func cacheFile(_ name: String) -> URL {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
+    }
 
 
 
 
+    func saveRowCache(_ rows: [Reg]) {
+        if let data = try? JSONEncoder().encode(rows) {
+            try? data.write(to: cacheFile("forsyth-rows.json"))
+        }
+    }
 
     func loadPeople() {
         if let data = UserDefaults.standard.data(forKey: "north.people"),
@@ -303,5 +323,95 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         ]
     }
 
+    nonisolated static func rowsFrom(_ text: String) -> [Reg] {
+        var lines: [String] = []
+        text.enumerateLines { line, _ in
+            if !line.trimmingCharacters(in: .whitespaces).isEmpty {
+                lines.append(line)
+            }
+        }
+        if lines.count < 2 { return [] }
+        let head = splitCSV(lines[0]).map { $0.trimmingCharacters(in: .whitespacesAndNewlines).uppercased() }
+        func col(_ name: String) -> Int { head.firstIndex(of: name) ?? -1 }
+        let iCounty = col("COUNTY")
+        let iState = col("STATE")
+        let iNum = col("STREET NUMBER")
+        let iStreet = col("STREET")
+        let iCity = col("CITY")
+        let iZip = col("ZIP CODE")
+        let iName = col("NAME")
+        let iCrime = col("CRIME")
+        let iLevel = col("LEVELING")
+        let iPred = col("PREDATOR")
+        let iAbs = col("ABSCONDER")
+        let iJail = col("INCARCERATED")
+        if iCounty < 0 || iStreet < 0 || iName < 0 { return [] }
+        var out: [Reg] = []
+        var n = 1
+        while n < lines.count {
+            let f = splitCSV(lines[n])
+            n += 1
+            func val(_ i: Int) -> String {
+                if i < 0 || i >= f.count { return "" }
+                return f[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            if val(iCounty).uppercased() != "FORSYTH" { continue }
+            if iState >= 0 && val(iState).uppercased() != "GA" { continue }
+            if val(iJail).uppercased() == "INCARCERATED" { continue }
+            let num = val(iNum)
+            let street = val(iStreet)
+            if num.isEmpty || street.isEmpty { continue }
+            let city = val(iCity)
+            let zip = val(iZip)
+            let addr = num + " " + street + ", " + city + ", GA " + zip
+            let level = val(iLevel).uppercased()
+            let pred = val(iPred).uppercased()
+            let absn = val(iAbs).uppercased()
+            var band = "low"
+            if pred.contains("PREDATOR") || level.contains("DANGEROUS") || level.contains("PREDATOR") {
+                band = "high"
+            } else if level.contains("LEVEL 2") {
+                band = "mid"
+            }
+            if absn.contains("ABSCONDER") {
+                if band == "low" { band = "mid" }
+                else if band == "mid" { band = "high" }
+            }
+            let shownLevel = val(iLevel).isEmpty ? "NOT LEVELED" : val(iLevel)
+            let detail = shownLevel + " · " + city + "\n" + val(iCrime)
+            out.append(Reg(name: val(iName), addr: addr, band: band, detail: detail))
+        }
+        return out
+    }
 
+    nonisolated static func splitCSV(_ line: String) -> [String] {
+        var out: [String] = []
+        var cur = ""
+        var q = false
+        var i = line.startIndex
+        while i < line.endIndex {
+            let c = line[i]
+            if c == "\"" {
+                let n = line.index(after: i)
+                if q && n < line.endIndex && line[n] == "\"" {
+                    cur.append("\"")
+                    i = line.index(after: n)
+                    continue
+                }
+                q.toggle()
+                i = n
+                continue
+            }
+            if c == "," && !q {
+                out.append(cur)
+                cur = ""
+                i = line.index(after: i)
+                continue
+            }
+            cur.append(c)
+            i = line.index(after: i)
+        }
+        out.append(cur)
+        return out
+    }
 }
