@@ -102,6 +102,7 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         if UserDefaults.standard.object(forKey: "north.dark") != nil {
             dark = UserDefaults.standard.bool(forKey: "north.dark")
         }
+        loadSpotCache()
         Task { await pullRegistry() }
     }
 
@@ -226,8 +227,13 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
 
 
 
+    func score(_ line: [CLLocationCoordinate2D]) {
+    }
 
     func pullRegistry() async {
+        if let cached = loadRowCache(), !cached.isEmpty {
+            await draw(cached)
+        }
         guard let url = URL(string: "https://state.sor.gbi.ga.gov/SORT_PUBLIC/sor.csv") else { return }
         var req = URLRequest(url: url)
         req.timeoutInterval = 45
@@ -237,13 +243,120 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         let rows = await Task.detached { Pocket.rowsFrom(text) }.value
         if rows.isEmpty { return }
         saveRowCache(rows)
+        await draw(rows)
+        await pullAmber()
     }
 
+    func draw(_ rows: [Reg]) async {
+        if rows.isEmpty { return }
+        offenders = []
+        usingLive = true
+        pins = ambers
+        for row in rows {
+            guard let c = await lookup(row.addr) else { continue }
+            if c.latitude < 34.00 || c.latitude > 34.48 || c.longitude < -84.50 || c.longitude > -83.90 {
+                spots[row.addr] = (0, 0)
+                saveSpots()
+                continue
+            }
+            let j = nudge(row.name)
+            let pin = Pin(lat: c.latitude + j.0, lon: c.longitude + j.1, band: row.band, title: row.name, detail: row.detail)
+            offenders.append(pin)
+            pins = offenders + ambers
+        }
+        if routeIsLive { score(route) }
+    }
 
+    func pullAmber() async {
+        guard let url = URL(string: "https://gbi.georgia.gov/rss.xml") else { return }
+        guard let (data, _) = try? await URLSession.shared.data(from: url) else { return }
+        let text = String(decoding: data, as: UTF8.self)
+        let parts = text.components(separatedBy: "<item>")
+        var found: [(String, String)] = []
+        var i = 1
+        while i < parts.count {
+            let chunk = parts[i]
+            i += 1
+            let title = grab(chunk, "title")
+            let desc = grab(chunk, "description")
+            let blob = (title + " " + desc).lowercased()
+            if blob.contains("amber alert") || blob.contains("levi's call") || blob.contains("levi’s call") || blob.contains("levis call") {
+                found.append((title, desc))
+            }
+            if found.count >= 4 { break }
+        }
+        var next: [Pin] = []
+        for item in found {
+            let blob = item.0 + " " + item.1
+            let place = guessPlace(blob)
+            if place.isEmpty { continue }
+            guard let c = await lookup(place) else { continue }
+            next.append(Pin(lat: c.latitude, lon: c.longitude, band: "amber", title: item.0, detail: item.1))
+        }
+        ambers = next
+        if usingLive {
+            pins = offenders + ambers
+        }
+        if routeIsLive { score(route) }
+    }
 
+    func guessPlace(_ blob: String) -> String {
+        let t = blob.lowercased()
+        if t.contains("forsyth") || t.contains("cumming") {
+            return "Cumming, GA"
+        }
+        return ""
+    }
 
+    func grab(_ s: String, _ tag: String) -> String {
+        let open = "<" + tag + ">"
+        let close = "</" + tag + ">"
+        guard let a = s.range(of: open), let b = s.range(of: close), a.upperBound <= b.lowerBound else { return "" }
+        var t = String(s[a.upperBound..<b.lowerBound])
+        if let c0 = t.range(of: "<![CDATA[") {
+            t = String(t[c0.upperBound...])
+            if let end = t.range(of: "]]>") {
+                t = String(t[..<end.lowerBound])
+            }
+        }
+        t = t.replacingOccurrences(of: "&amp;", with: "&")
+        t = t.replacingOccurrences(of: "&#039;", with: "'")
+        t = t.replacingOccurrences(of: "&quot;", with: "\"")
+        return t.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
+    func lookup(_ addr: String) async -> CLLocationCoordinate2D? {
+        if let hit = spots[addr] {
+            if hit.0 == 0 && hit.1 == 0 { return nil }
+            return CLLocationCoordinate2D(latitude: hit.0, longitude: hit.1)
+        }
+        while geoBusy {
+            try? await Task.sleep(nanoseconds: 200_000_000)
+        }
+        geoBusy = true
+        let g = CLGeocoder()
+        let marks = try? await g.geocodeAddressString(addr)
+        let c = marks?.first?.location?.coordinate
+        if let c {
+            spots[addr] = (c.latitude, c.longitude)
+        } else {
+            spots[addr] = (0, 0)
+        }
+        saveSpots()
+        try? await Task.sleep(nanoseconds: 1_150_000_000)
+        geoBusy = false
+        return c
+    }
 
+    func nudge(_ name: String) -> (Double, Double) {
+        var h = 0
+        for ch in name.unicodeScalars {
+            h = (h * 33 + Int(ch.value)) & 0x7fffffff
+        }
+        let jlat = Double((h % 7) - 3) * 0.00012
+        let jlon = Double(((h / 7) % 7) - 3) * 0.00012
+        return (jlat, jlon)
+    }
 
     func ping(_ title: String, _ body: String, after: TimeInterval?) {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { ok, _ in
@@ -265,8 +378,28 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
     }
 
+    func loadSpotCache() {
+        let url = cacheFile("forsyth-spots.json")
+        guard let data = try? Data(contentsOf: url) else { return }
+        guard let raw = try? JSONDecoder().decode([String: [Double]].self, from: data) else { return }
+        for (k, v) in raw {
+            if v.count >= 2 { spots[k] = (v[0], v[1]) }
+        }
+    }
 
+    func saveSpots() {
+        var raw: [String: [Double]] = [:]
+        for (k, v) in spots { raw[k] = [v.0, v.1] }
+        if let data = try? JSONEncoder().encode(raw) {
+            try? data.write(to: cacheFile("forsyth-spots.json"))
+        }
+    }
 
+    func loadRowCache() -> [Reg]? {
+        let url = cacheFile("forsyth-rows.json")
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return try? JSONDecoder().decode([Reg].self, from: data)
+    }
 
     func saveRowCache(_ rows: [Reg]) {
         if let data = try? JSONEncoder().encode(rows) {
