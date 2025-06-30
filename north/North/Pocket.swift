@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import MapKit
 import UserNotifications
 import MessageUI
 
@@ -102,6 +103,12 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         if UserDefaults.standard.object(forKey: "north.dark") != nil {
             dark = UserDefaults.standard.bool(forKey: "north.dark")
         }
+        if UserDefaults.standard.object(forKey: "north.homeLat") != nil {
+            home = CLLocationCoordinate2D(
+                latitude: UserDefaults.standard.double(forKey: "north.homeLat"),
+                longitude: UserDefaults.standard.double(forKey: "north.homeLon")
+            )
+        }
         loadSpotCache()
         Task { await pullRegistry() }
     }
@@ -154,6 +161,10 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         if loc.course >= 0 && loc.speed > 0.8 {
             heading = loc.course
         }
+        if routeIsLive {
+            walkedAlong(route)
+        }
+        maybeRoute(force: false)
     }
 
     func takeHeading(_ raw: Double, _ acc: Double) {
@@ -220,14 +231,139 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func homeFromPress() {
+        home = spot
+        UserDefaults.standard.set(spot.latitude, forKey: "north.homeLat")
+        UserDefaults.standard.set(spot.longitude, forKey: "north.homeLon")
+        going = ""
+        destName = "Home"
+        keepNote()
+        maybeRoute(force: true)
     }
 
     func maybeRoute(force: Bool) {
+        if routeBusy { return }
+        if !force && routedFrom.latitude != 0 {
+            if meters(spot, routedFrom) < 220 && going == lastGoingRouted { return }
+        }
+        routeBusy = true
+        lastGoingRouted = going
+        let here = spot
+        let typed = going
+        Task { await self.buildRoute(here, typed) }
     }
 
+    func buildRoute(_ here: CLLocationCoordinate2D, _ typed: String) async {
+        var dest = home
+        var name = "Home"
+        let clean = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !clean.isEmpty && clean.lowercased() != "home" {
+            let q = clean.lowercased().contains("ga") ? clean : clean + ", GA"
+            if let c = await lookup(q) {
+                dest = c
+                name = clean
+            }
+        }
+        destName = name
+        let req = MKDirections.Request()
+        req.source = MKMapItem(placemark: MKPlacemark(coordinate: here))
+        req.destination = MKMapItem(placemark: MKPlacemark(coordinate: dest))
+        req.transportType = .automobile
+        let dirs = MKDirections(request: req)
+        let resp = try? await dirs.calculate()
+        if let line = resp?.routes.first {
+            let poly = line.polyline
+            let n = poly.pointCount
+            if n > 1 {
+                var buf = Array(repeating: CLLocationCoordinate2D(), count: n)
+                poly.getCoordinates(&buf, range: NSRange(location: 0, length: n))
+                route = buf
+                routeIsLive = true
+                pathSpan = 0
+                miles = line.distance / 1609.344
+                let mins = Int((line.expectedTravelTime / 60).rounded())
+                minutes = mins < 1 ? 1 : mins
+                routedFrom = here
+                walkedAlong(buf)
+                score(buf)
+            }
+        }
+        routeBusy = false
+    }
 
+    func walkedAlong(_ line: [CLLocationCoordinate2D]) {
+        if line.isEmpty { walked = 0; return }
+        var bestI = 0
+        var bestD = 1e12
+        var i = 0
+        while i < line.count {
+            let d = meters(spot, line[i])
+            if d < bestD {
+                bestD = d
+                bestI = i
+            }
+            i += 1
+        }
+        var along = 0.0
+        if bestI > 0 {
+            var k = 1
+            while k <= bestI {
+                along += meters(line[k - 1], line[k])
+                k += 1
+            }
+        }
+        walked = along / 1609.344
+    }
 
     func score(_ line: [CLLocationCoordinate2D]) {
+        if line.count < 2 { return }
+        var seen = Set<String>()
+        var high = 0
+        var mid = 0
+        var low = 0
+        var notes: [String] = []
+        var i = 0
+        while i < line.count {
+            let p = line[i]
+            for pin in offenders {
+                let key = pin.title + "|" + pin.detail
+                if seen.contains(key) { continue }
+                let d = meters(p, pin.coord)
+                let close = d < 240 || (d < 520 && pin.band == "high")
+                if !close { continue }
+                seen.insert(key)
+                if pin.band == "high" { high += 1 }
+                else if pin.band == "mid" { mid += 1 }
+                else { low += 1 }
+                if notes.count < 6 {
+                    notes.append(pin.band + " pin " + String(format: "%.2f", d / 1609.344) + " mi off the route, " + pin.title)
+                }
+            }
+            i += 3
+        }
+        if let last = line.last {
+            for pin in offenders {
+                let key = pin.title + "|" + pin.detail
+                if seen.contains(key) { continue }
+                let d = meters(last, pin.coord)
+                if d < 240 || (d < 520 && pin.band == "high") {
+                    seen.insert(key)
+                    if pin.band == "high" { high += 1 }
+                    else if pin.band == "mid" { mid += 1 }
+                    else { low += 1 }
+                    if notes.count < 6 {
+                        notes.append(pin.band + " pin " + String(format: "%.2f", d / 1609.344) + " mi off the route, " + pin.title)
+                    }
+                }
+            }
+        }
+        var s = 100 - high * 6 - mid * 3 - low
+        if s > 97 { s = 97 }
+        if s < 54 { s = 54 }
+        safe = s
+        routeNotes = notes
+        for a in ambers {
+            routeNotes.append("Amber bulletin: " + a.title)
+        }
     }
 
     func pullRegistry() async {
@@ -373,6 +509,15 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
 
+    func meters(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Double {
+        let r = 6371000.0
+        let p1 = a.latitude * .pi / 180
+        let p2 = b.latitude * .pi / 180
+        let dp = (b.latitude - a.latitude) * .pi / 180
+        let dl = (b.longitude - a.longitude) * .pi / 180
+        let h = sin(dp / 2) * sin(dp / 2) + cos(p1) * cos(p2) * sin(dl / 2) * sin(dl / 2)
+        return 2 * r * asin(min(1, sqrt(h)))
+    }
 
     func cacheFile(_ name: String) -> URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent(name)
