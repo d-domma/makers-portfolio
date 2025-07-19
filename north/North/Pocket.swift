@@ -109,8 +109,13 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
                 longitude: UserDefaults.standard.double(forKey: "north.homeLon")
             )
         }
+        meet = UserDefaults.standard.string(forKey: "north.meet") ?? ""
+        going = UserDefaults.standard.string(forKey: "north.going") ?? ""
+        let stamp = UserDefaults.standard.double(forKey: "north.checkEnd")
+        if stamp > 0 { checkEnd = Date(timeIntervalSince1970: stamp) }
         loadSpotCache()
         Task { await pullRegistry() }
+        pokeCheck()
     }
 
     func startFix() {
@@ -213,15 +218,40 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
 
     func keepNote() {
+        UserDefaults.standard.set(meet, forKey: "north.meet")
+        UserDefaults.standard.set(going, forKey: "north.going")
     }
 
     func startCheck() {
+        let end = Date().addingTimeInterval(60 * 60)
+        checkEnd = end
+        UserDefaults.standard.set(end.timeIntervalSince1970, forKey: "north.checkEnd")
+        keepNote()
+        var body = "The 60 minutes are up."
+        if !meet.isEmpty { body += " Meeting " + meet + "." }
+        if !going.isEmpty { body += " Place " + going + "." }
+        body += " Last spot " + String(format: "%.5f, %.5f", spot.latitude, spot.longitude)
+        ping("Check-in", body, after: 60 * 60)
+        UserDefaults.standard.set(0.0, forKey: "north.missedFor")
     }
 
     func endCheck() {
+        checkEnd = nil
+        UserDefaults.standard.set(0.0, forKey: "north.checkEnd")
+        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["Check-in"])
     }
 
     func pokeCheck() {
+        guard let end = checkEnd else { return }
+        if end > Date() { return }
+        if Date().timeIntervalSince(end) > 6 * 3600 { return }
+        let stamp = end.timeIntervalSince1970
+        if UserDefaults.standard.double(forKey: "north.missedFor") == stamp { return }
+        UserDefaults.standard.set(stamp, forKey: "north.missedFor")
+        let body = "Check-in missed. Last spot " + String(format: "%.5f, %.5f", spot.latitude, spot.longitude)
+        if MFMessageComposeViewController.canSendText() {
+            outgoing = OutNote(body: body)
+        }
     }
 
     func scan() {
