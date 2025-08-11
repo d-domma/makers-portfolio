@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "731CA9099D136C50208763A5"
+               BlueprintIdentifier = "880A03ED079D4CD4ED7361A8"
                BuildableName = "North.app"
                BlueprintName = "North"
                ReferencedContainer = "container:North.xcodeproj">
@@ -36,7 +36,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "731CA9099D136C50208763A5"
+            BlueprintIdentifier = "880A03ED079D4CD4ED7361A8"
             BuildableName = "North.app"
             BlueprintName = "North"
             ReferencedContainer = "container:North.xcodeproj">

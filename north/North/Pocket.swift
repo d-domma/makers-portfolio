@@ -254,10 +254,48 @@ final class Pocket: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
 
-    func scan() {
-    }
+    func scan() { showScam = true }
 
     func scoreScam() {
+        let raw = scamText
+        let t = raw.lowercased()
+        var bits: [String] = []
+        var n = 0
+        if t.contains("gift card") || t.contains("itunes") || t.contains("google play card") || t.contains("steam card") {
+            bits.append("Asks for a gift card")
+            n += 30
+        }
+        if t.contains("wire") || t.contains("bitcoin") || t.contains("crypto") || t.contains("venmo") || t.contains("cash app") {
+            bits.append("Wants a payment that is hard to undo")
+            n += 22
+        }
+        if t.contains("urgent") || t.contains("immediately") || t.contains("act now") || t.contains("suspended") || t.contains("right now") {
+            bits.append("Pushes you to hurry")
+            n += 16
+        }
+        if t.contains("verify") && (t.contains("account") || t.contains("password") || t.contains("ssn") || t.contains("social security")) {
+            bits.append("Asks you to verify an account")
+            n += 24
+        }
+        if t.contains("http://") || t.contains("bit.ly") || t.contains("tinyurl") {
+            bits.append("Has a short or bare link")
+            n += 12
+        }
+        if t.contains("you won") || t.contains("prize") || t.contains("congratulations") {
+            bits.append("Prize wording")
+            n += 18
+        }
+        if (t.contains("code") || t.contains("otp") || t.contains("one-time")) && (t.contains("send") || t.contains("reply") || t.contains("share")) {
+            bits.append("Wants a code you were texted")
+            n += 20
+        }
+        if raw.trimmingCharacters(in: .whitespacesAndNewlines).count < 8 {
+            n = 0
+            bits = []
+        }
+        if n > 100 { n = 100 }
+        scamScore = n
+        scamBits = bits
     }
 
     func homeFromPress() {
