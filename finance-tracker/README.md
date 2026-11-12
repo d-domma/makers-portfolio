@@ -4,4 +4,4 @@ version 1 is just the home page with the header and the footer. version 2 adds l
 
 to run one just go in the folder and do npm install then npx ng serve and it comes up on localhost 4200. the trends page and the help page need that because those calls go through the dev server.
 
-version 7 fixes some bugs.
+version 7 fixes some bugs with the AI speech in the help chat so the responses sound more natural and work more smoothly.
