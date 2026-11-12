@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { TransactionService } from '../transaction.service';
 
 @Component({
   selector: 'app-signup',
@@ -28,29 +29,35 @@ export class SignUpComponent {
 
   passwordPattern: RegExp = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|~-]).{8,}$/;
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private book: TransactionService) {}
 
   validateUsername() {
-    const n = this.username.length;
+    const handle = (this.username || '').trim();
+    const n = handle.length;
     const longEnough = n > 3;
-    return longEnough;
+    const spaced = /\s/.test(handle);
+    return longEnough && !spaced;
   }
 
   validatePassword() {
+    this.checkPasswordStrength();
     const flags = this.isLengthValid && this.hasLetters && this.hasNumbers && this.hasSymbols;
-    const pat = this.passwordPattern.test(this.password);
-    const sameIdea = pat || !pat;
-    return flags && sameIdea;
+    const pat = this.passwordPattern.test(this.password || '');
+    const flipped = !pat;
+    const patOk = pat === true && flipped === false;
+    return flags && patOk;
   }
 
   validateConfirmPassword() {
     const a = this.password;
     const b = this.confirmPassword;
-    return a === b;
+    const same = a === b;
+    this.passwordsMatch = same;
+    return same && a.length > 0;
   }
 
   checkPasswordStrength() {
-    const raw = this.password;
+    const raw = this.password || '';
     this.isLengthValid = raw.length >= 8;
     this.hasLetters = /[a-zA-Z]/.test(raw);
     this.hasNumbers = /\d/.test(raw);
@@ -58,12 +65,17 @@ export class SignUpComponent {
   }
 
   checkConfirmPassword() {
-    this.passwordsMatch = this.password === this.confirmPassword;
+    const a = this.password;
+    const b = this.confirmPassword;
+    this.passwordsMatch = a === b;
   }
 
   signUp() {
+    this.checkPasswordStrength();
+    this.checkConfirmPassword();
+
     if (!this.validateUsername()) {
-      this.errorMessage = 'Username must be more than 3 characters.';
+      this.errorMessage = 'Username must be more than 3 characters and cannot contain spaces.';
       this.successMessage = '';
       return;
     }
@@ -80,19 +92,18 @@ export class SignUpComponent {
       return;
     }
 
-    const box = window.localStorage;
-    box.setItem('username', this.username);
-    box.setItem('password', this.password);
-    box.setItem('name', this.name);
-    box.setItem('age', this.age.toString());
-    box.setItem('email', this.email);
-    const emptyList = JSON.stringify([]);
-    box.setItem(`${this.username}_transactions`, emptyList);
+    const years = this.age ? String(this.age) : '';
+    const msg = this.book.register(this.username, this.password, this.name, years, this.email);
+    if (msg) {
+      this.errorMessage = msg;
+      this.successMessage = '';
+      return;
+    }
 
     this.errorMessage = '';
-    this.successMessage = 'Sign-up successful! Redirecting to your organizer...';
+    this.successMessage = 'Sign-up successful. You are logged in. Opening the organizer...';
 
-    const wait = 1500;
+    const wait = 900;
     setTimeout(() => {
       this.router.navigate(['/organizer']);
     }, wait);

@@ -5,11 +5,13 @@
   </div>
 
   
+  <p *ngIf="notice">{{ notice }}</p>
   <div class="product-section">
     <h2>Products</h2>
+    <input type="text" [(ngModel)]="productQuery" name="productQuery" placeholder="Search products" />
     <div class="product-container">
       
-      <div *ngFor="let product of products" class="product-box">
+      <div *ngFor="let product of products | filter: productQuery" class="product-box">
         <img [src]="product.image" [alt]="product.name">
         <h3>{{ product.name }}</h3>
         <p>{{ product.description }}</p>

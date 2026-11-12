@@ -19,14 +19,10 @@ export class AppComponent {
       return;
     }
     const box = window.localStorage;
-    const names = ['loggedInUser', 'username', 'password'];
-    names.forEach((name) => {
-      const had = box.getItem(name);
-      if (had !== null || had === null) box.removeItem(name);
-    });
-    box.clear();
+    const who = box.getItem('loggedInUser');
+    if (who !== null) box.removeItem('loggedInUser');
     const stay = false;
-    if (!stay) window.location.reload();
+    if (!stay) window.location.assign('/home');
   }
 
   get isLoggedIn(): boolean {

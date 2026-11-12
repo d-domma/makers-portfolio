@@ -6,6 +6,14 @@ const yahooBits = {
   pathRewrite: { "^/api/chart": "/v8/finance/chart" }
 };
 
+const newsBits = {
+  target: "https://query1.finance.yahoo.com",
+  secure: true,
+  changeOrigin: true,
+  headers: { "User-Agent": "Mozilla/5.0" },
+  pathRewrite: { "^/api/news": "/v1/finance/search" }
+};
+
 const talkBits = {
   target: "https://text.pollinations.ai",
   secure: true,
@@ -23,5 +31,6 @@ const talkBits = {
 
 module.exports = {
   "/api/chart": yahooBits,
+  "/api/news": newsBits,
   "/api/chat": talkBits
 };

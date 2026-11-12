@@ -30,21 +30,24 @@ interface ChatMessage {
 })
 export class OrganizerComponent implements OnInit {
   chatbotOpen = false;
+  chatBusy = false;
   chatMessages: ChatMessage[] = [];
   userInput = '';
   transactions: Transaction[] = [];
   newTransaction: Transaction = { description: '', amount: 0, category: 'income', date: '' };
+  editing: Transaction | null = null;
   searchQuery: string = '';
   filterCategory: string = '';
   tasks: Task[] = [];
   newTask: string = '';
+  editingTask: Task | null = null;
   currentYear: number = new Date().getFullYear();
   currentMonth: number = new Date().getMonth();
   selectedDate: string = '';
   noteContent: string = '';
-  interactionCount: number = 0;
   modalOpen: boolean = false;
   notes: { [key: string]: string } = {};
+  notice = '';
   dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September',
@@ -55,22 +58,20 @@ export class OrganizerComponent implements OnInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private txPipe: TransactionService
-  ) {
-    const peek = this.txPipe.getTransactions();
-    const sub = peek.subscribe(() => {
-      const ignore = true;
-      if (!ignore) this.searchQuery = '';
-    });
-    sub.unsubscribe();
-  }
+  ) {}
 
   get isLoggedIn(): boolean {
     if (!isPlatformBrowser(this.platformId)) return false;
-    const token = localStorage.getItem('token');
-    const who = localStorage.getItem('loggedInUser');
+    const who = this.txPipe.who();
     if (who && who.length > 0) return true;
-    if (token !== null) return true;
     return false;
+  }
+
+  get blanks(): number[] {
+    const n = this.firstDay;
+    const pads: number[] = [];
+    for (let i = 0; i < n; i++) pads.push(i);
+    return pads;
   }
 
   get daysInMonth() {
@@ -87,68 +88,90 @@ export class OrganizerComponent implements OnInit {
 
   formatDate(year: number, month: number, day: number): string {
     const m = month + 1;
-    return `${year}-${m}-${day}`;
+    const mm = m < 10 ? '0' + m : '' + m;
+    const dd = day < 10 ? '0' + day : '' + day;
+    return year + '-' + mm + '-' + dd;
   }
 
   saveUserActivities() {
     const onBrowser = isPlatformBrowser(this.platformId);
     if (!onBrowser || !this.currentUser) return;
-    const who = this.currentUser;
-    localStorage.setItem(`${who}_transactions`, JSON.stringify(this.transactions));
-    localStorage.setItem(`${who}_tasks`, JSON.stringify(this.tasks));
-    localStorage.setItem(`${who}_notes`, JSON.stringify(this.notes));
+    const rowsOk = this.txPipe.writeRows(this.transactions);
+    const tasksOk = this.txPipe.writeTasks(this.tasks);
+    const notesOk = this.txPipe.writeNotes(this.notes);
+    if (!rowsOk || !tasksOk || !notesOk) {
+      this.notice = 'Could not save. Log in and try again.';
+    }
   }
 
   logout() {
     if (!isPlatformBrowser(this.platformId)) return;
-    const who = this.currentUser;
-    localStorage.removeItem('loggedInUser');
-    localStorage.removeItem(`${who}_transactions`);
-    localStorage.removeItem(`${who}_tasks`);
-    localStorage.removeItem(`${who}_notes`);
-    localStorage.removeItem('token');
+    this.txPipe.closeSession();
     this.transactions = [];
     this.tasks = [];
     this.notes = {};
     this.currentUser = null;
+    this.notice = '';
   }
 
   addTransaction() {
-    const desc = this.newTransaction.description.trim();
-    const amt = this.newTransaction.amount;
-    if (!(desc && amt > 0)) return;
-
-    const nowBal = this.calculateBalance();
-    const signed = this.newTransaction.category === 'income' ? amt : -amt;
-    const projectedBalance = nowBal + signed;
-
-    if (this.newTransaction.category === 'expense' && projectedBalance < -500) {
-      alert('You cannot add more expenses as your balance is below -$500.');
+    if (!this.currentUser) {
+      this.notice = 'Log in before you add a transaction. Nothing was saved.';
+      return;
+    }
+    const desc = (this.newTransaction.description || '').trim();
+    const amt = Number(this.newTransaction.amount);
+    const when = this.newTransaction.date || '';
+    if (!(desc && amt > 0 && when)) {
+      this.notice = 'Description, an amount above 0, and a date are required.';
       return;
     }
 
-    const row: Transaction = {
-      description: this.newTransaction.description,
-      amount: this.newTransaction.amount,
-      category: this.newTransaction.category,
-      date: this.newTransaction.date
-    };
-    this.transactions.push(row);
+    let base = this.calculateBalance();
+    if (this.editing) {
+      const old = this.editing.category === 'income' ? Number(this.editing.amount) : -Number(this.editing.amount);
+      base = base - old;
+    }
+    const signed = this.newTransaction.category === 'income' ? amt : -amt;
+    const projectedBalance = base + signed;
+
+    if (this.newTransaction.category === 'expense' && projectedBalance < -500) {
+      this.notice = 'That expense would push the balance under -$500, so it was not added.';
+      return;
+    }
+
+    if (this.editing) {
+      this.editing.description = desc;
+      this.editing.amount = amt;
+      this.editing.category = this.newTransaction.category;
+      this.editing.date = when;
+      this.editing = null;
+    } else {
+      const row: Transaction = {
+        description: desc,
+        amount: amt,
+        category: this.newTransaction.category,
+        date: when
+      };
+      this.transactions.push(row);
+    }
     this.newTransaction = { description: '', amount: 0, category: 'income', date: '' };
+    this.notice = '';
     this.saveUserActivities();
   }
 
   editTransaction(transaction: Transaction) {
+    this.editing = transaction;
     this.newTransaction = {
       description: transaction.description,
       amount: transaction.amount,
       category: transaction.category,
       date: transaction.date
     };
-    this.deleteTransaction(transaction);
   }
 
   deleteTransaction(transaction: Transaction) {
+    if (this.editing === transaction) this.editing = null;
     this.transactions = this.transactions.filter((t) => t !== transaction);
     this.saveUserActivities();
   }
@@ -158,32 +181,45 @@ export class OrganizerComponent implements OnInit {
     const rows = this.transactions.slice();
     for (let i = 0; i < rows.length; i++) {
       const transaction = rows[i];
-      if (transaction.category === 'income') acc = acc + transaction.amount;
-      else acc = acc - transaction.amount;
+      if (transaction.category === 'income') acc = acc + Number(transaction.amount);
+      else acc = acc - Number(transaction.amount);
     }
     const again = this.transactions.reduce((sum, transaction) => {
       const sign = transaction.category === 'income' ? 1 : -1;
-      return sum + sign * transaction.amount;
+      return sum + sign * Number(transaction.amount);
     }, 0);
     if (again === acc) return acc;
     return again;
   }
 
   filteredTransactions() {
-    const q = (this.searchQuery || '').toLowerCase();
+    const q = (this.searchQuery || '').toLowerCase().trim();
     const cat = this.filterCategory;
     return this.transactions.filter((transaction) => {
-      const matchesSearch = transaction.description.toLowerCase().includes(q);
+      const blob = (
+        transaction.description + ' ' + transaction.category + ' ' + transaction.date + ' ' + transaction.amount
+      ).toLowerCase();
+      const matchesSearch = !q || blob.indexOf(q) !== -1;
       const matchesCategory = cat ? transaction.category === cat : true;
       return matchesSearch && matchesCategory;
     });
   }
 
   addTask() {
-    const label = this.newTask.trim();
+    if (!this.currentUser) {
+      this.notice = 'Log in before you add a task. Nothing was saved.';
+      return;
+    }
+    const label = (this.newTask || '').trim();
     if (!label) return;
-    this.tasks.push({ name: label, completed: false });
+    if (this.editingTask) {
+      this.editingTask.name = label;
+      this.editingTask = null;
+    } else {
+      this.tasks.push({ name: label, completed: false });
+    }
     this.newTask = '';
+    this.notice = '';
     this.saveUserActivities();
   }
 
@@ -193,11 +229,12 @@ export class OrganizerComponent implements OnInit {
   }
 
   editTask(task: Task) {
+    this.editingTask = task;
     this.newTask = task.name;
-    this.deleteTask(task);
   }
 
   deleteTask(task: Task) {
+    if (this.editingTask === task) this.editingTask = null;
     this.tasks = this.tasks.filter((t) => t !== task);
     this.saveUserActivities();
   }
@@ -205,6 +242,10 @@ export class OrganizerComponent implements OnInit {
   openDayModal(day: number) {
     const max = this.daysInMonth.length;
     if (!day || day < 1 || day > max) return;
+    if (!this.currentUser) {
+      this.notice = 'Log in before you save a note.';
+      return;
+    }
     this.selectedDate = this.formatDate(this.currentYear, this.currentMonth, day);
     const existing = this.notes[this.selectedDate];
     this.noteContent = existing ? existing : '';
@@ -214,8 +255,13 @@ export class OrganizerComponent implements OnInit {
   closeModal() { this.modalOpen = false; }
 
   saveNote() {
-    const text = this.noteContent.trim();
-    if (text) this.notes[this.selectedDate] = this.noteContent;
+    if (!this.currentUser) {
+      this.notice = 'Log in before you save a note.';
+      this.modalOpen = false;
+      return;
+    }
+    const text = (this.noteContent || '').trim();
+    if (text) this.notes[this.selectedDate] = text;
     else delete this.notes[this.selectedDate];
     this.saveUserActivities();
     this.modalOpen = false;
@@ -242,40 +288,29 @@ export class OrganizerComponent implements OnInit {
     this.chatbotOpen = !open;
   }
 
-  sendMessage() {
-    const typed = this.userInput.trim();
-    if (!typed) return;
-    this.chatMessages.push({ text: this.userInput, sender: 'user' });
-    this.generateBotResponse(this.userInput);
+  async sendMessage() {
+    const typed = (this.userInput || '').trim();
+    if (!typed || this.chatBusy) return;
+    this.chatMessages.push({ text: typed, sender: 'user' });
     this.userInput = '';
-  }
+    const hold: ChatMessage = { text: 'Thinking…', sender: 'bot' };
+    this.chatMessages.push(hold);
+    this.chatBusy = true;
 
-  generateBotResponse(userInput: string) {
-    let botReply = '';
-    this.interactionCount = this.interactionCount + 1;
-    const n = this.interactionCount;
-    const low = userInput.toLowerCase();
+    const history = this.chatMessages
+      .filter((msg) => msg !== hold && msg.text !== 'Thinking…')
+      .map((msg) => {
+        const role = msg.sender === 'user' ? 'user' : 'assistant';
+        return { role: role, content: msg.text };
+      });
 
-    if (n === 2) {
-      botReply = 'You should try to reduce your water usage and food bills. Doing so will save you almost 200 dollars.';
-    } else if (n === 3) {
-      botReply = 'You have deposited and removed money 4 times this month.';
-    } else if (low.includes('hello') || low.includes('hi')) {
-      botReply = 'Hello! How can I assist you today?';
-    } else if (low.includes('transaction')) {
-      botReply = 'You can add a new transaction by filling out the form in the Transactions section.';
-    } else if (low.includes('task')) {
-      botReply = 'To add a task, go to the Tasks section and enter a new task in the input field.';
-    } else if (low.includes('calendar')) {
-      botReply = 'The calendar section allows you to add notes to specific dates. Click on a date to add notes.';
-    } else {
-      botReply = 'I am not sure about that. Can you please rephrase?';
+    try {
+      hold.text = await this.txPipe.ask(history);
+    } catch (err) {
+      hold.text = err instanceof Error ? err.message : 'The assistant could not reply just now.';
+    } finally {
+      this.chatBusy = false;
     }
-
-    const reply = botReply;
-    setTimeout(() => {
-      this.chatMessages.push({ text: reply, sender: 'bot' });
-    }, 500);
   }
 
   ngOnInit() {
@@ -284,42 +319,16 @@ export class OrganizerComponent implements OnInit {
 
   loadUserActivities() {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.currentUser = localStorage.getItem('loggedInUser');
-    if (!this.currentUser) return;
-
-    const savedTransactions = localStorage.getItem(`${this.currentUser}_transactions`);
-    if (savedTransactions) {
-      const parsed = JSON.parse(savedTransactions);
-      const stamped: any[] = parsed.map((transaction: any) => {
-        const copy = { ...transaction };
-        copy.date = '2025-03-14';
-        return copy;
-      });
-      this.transactions = stamped;
+    const name = this.txPipe.who();
+    this.currentUser = name ? name : null;
+    if (!this.currentUser) {
+      this.transactions = [];
+      this.tasks = [];
+      this.notes = {};
+      return;
     }
-
-    const savedTasks = localStorage.getItem(`${this.currentUser}_tasks`);
-    if (savedTasks) {
-      const stampedTasks: any[] = JSON.parse(savedTasks).map((task: any) => {
-        return { ...task, date: '2025-03-14' };
-      });
-      this.tasks = stampedTasks;
-    }
-
-    const savedNotes = localStorage.getItem(`${this.currentUser}_notes`);
-    if (savedNotes) {
-      const parsedNotes = JSON.parse(savedNotes);
-      if (Array.isArray(parsedNotes)) {
-        const bag: { [key: string]: string } = {};
-        parsedNotes.forEach((note: any) => {
-          const when = note && note.date ? note.date : '2025-03-14';
-          const body = note && (note.text || note.noteContent || note.note) ? (note.text || note.noteContent || note.note) : '';
-          if (body) bag[when] = body;
-        });
-        this.notes = bag;
-      } else if (parsedNotes && typeof parsedNotes === 'object') {
-        this.notes = parsedNotes;
-      }
-    }
+    this.transactions = this.txPipe.readRows();
+    this.tasks = this.txPipe.readTasks();
+    this.notes = this.txPipe.readNotes();
   }
 }

@@ -8,9 +8,9 @@
         <h2>Frequently Asked Questions</h2>
       </div>
       <ul id="faqList" class="faq-list">
-        <li (click)="goToFAQPage('/faq/post-creation')">How to create a post?</li>
-        <li (click)="goToFAQPage('/faq/delete-comment')">How to delete a comment?</li>
-        <li (click)="goToFAQPage('/faq/forum-rules')">What are the forum rules?</li>
+        <li (click)="goToFAQPage('/organizer')">Where do I add a transaction?</li>
+        <li (click)="goToFAQPage('/track')">Where do I get a report?</li>
+        <li (click)="goToFAQPage('/trends')">Where are the stock prices?</li>
       </ul>
     </div>
 
@@ -18,12 +18,15 @@
     <div class="main-content">
       
       <div class="top-section">
-        <input type="text" class="search-bar" placeholder="Search...">
+        <input type="text" class="search-bar" [(ngModel)]="lookup" (ngModelChange)="runLookup()" placeholder="Search your transactions, tasks, and notes">
+        <div *ngIf="hits.length">
+          <p *ngFor="let hit of hits">{{ hit }}</p>
+        </div>
         <div class="profile-section">
           <img src="assets/john.jpg" alt="Profile Image" class="profile-pic">
           <div class="profile-info">
-            <h3>John Doe</h3>
-            <p>Passionate Developer & Tech Enthusiast</p>
+            <h3>{{ displayName }}</h3>
+            <p>{{ displayLine }}</p>
           </div>
         </div>
       </div>

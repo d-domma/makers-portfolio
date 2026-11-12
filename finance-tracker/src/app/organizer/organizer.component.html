@@ -7,9 +7,12 @@
     <button (click)="logout()">Logout</button>
   </div>
 
+  <p *ngIf="notice">{{ notice }}</p>
+  <p *ngIf="!isLoggedIn">Log in before you add anything. This page will not keep it.</p>
+
   <section class="transaction-section">
     <h2>Transactions</h2>
-    <form (submit)="addTransaction()">
+    <form (ngSubmit)="addTransaction()">
       <input type="text" placeholder="Description" [(ngModel)]="newTransaction.description" name="description" required />
       <input type="number" placeholder="Amount" [(ngModel)]="newTransaction.amount" name="amount" required />
       <select [(ngModel)]="newTransaction.category" name="category" required>
@@ -17,7 +20,7 @@
         <option value="expense">Expense</option>
       </select>
       <input type="date" [(ngModel)]="newTransaction.date" name="date" required />
-      <button type="submit">Add Transaction</button>
+      <button type="submit">{{ editing ? 'Save Transaction' : 'Add Transaction' }}</button>
     </form>
 
     <div class="balance">
@@ -28,9 +31,14 @@
       <input
         type="text"
         [(ngModel)]="searchQuery"
-        placeholder="Search transactions by description..."
+        placeholder="Search description, category, date, or amount"
         name="search"
       />
+      <select [(ngModel)]="filterCategory" name="filterCategory">
+        <option value="">All categories</option>
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
     </div>
 
     <table class="transaction-table">
@@ -59,14 +67,14 @@
   </section>
   <section class="task-section">
     <h2>Tasks</h2>
-    <form (submit)="addTask()">
+    <form (ngSubmit)="addTask()">
       <input type="text" placeholder="New Task" [(ngModel)]="newTask" name="task" required />
-      <button type="submit">Add Task</button>
+      <button type="submit">{{ editingTask ? 'Save Task' : 'Add Task' }}</button>
     </form>
 
     <ul class="task-list">
       <li *ngFor="let task of tasks">
-        <input type="checkbox" [(ngModel)]="task.completed" />
+        <input type="checkbox" [(ngModel)]="task.completed" (ngModelChange)="saveUserActivities()" />
         <span [ngClass]="{ completed: task.completed }">{{ task.name }}</span>
         <button (click)="editTask(task)">Edit</button>
       </li>
@@ -79,23 +87,13 @@
       <h3>{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
       <button (click)="nextMonth()">&gt;</button>
     </div>
-    <div class="modal" *ngIf="modalOpen">
-      <div class="modal-content">
-        <h3>Add Notes for {{ selectedDate }}</h3>
-        <textarea [(ngModel)]="noteContent" placeholder="Enter notes here..."></textarea>
-        <button (click)="saveNote()">Save</button>
-        <button (click)="closeModal()">Cancel</button>
-      </div>
-    </div>
-    
-  
     <div class="calendar-grid">
       <div class="day-name" *ngFor="let day of dayNames">{{ day }}</div>
+      <div class="calendar-day" *ngFor="let pad of blanks"></div>
 
       <div
   class="calendar-day"
-  *ngFor="let i of daysInMonth; let index = index"
-  [class.other-month]="index < firstDay || index >= firstDay + daysInMonth.length"
+  *ngFor="let i of daysInMonth"
   (click)="openDayModal(i)"
 >
   <span>{{ i }}</span>

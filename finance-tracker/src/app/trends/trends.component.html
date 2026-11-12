@@ -9,17 +9,19 @@
           <th>Company</th>
           <th>Symbol</th>
           <th>Price</th>
-          <th>Change (%)</th>
+          <th>Daily change</th>
+          <th>Session</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let stock of stocks">
           <td>{{ stock.company }}</td>
-          <td>{{ stock.symbol }}</td>
+          <td><a [href]="stock.link" target="_blank" rel="noopener">{{ stock.symbol }}</a></td>
           <td>${{ stock.price.toFixed(2) }}</td>
           <td [class.positive]="stock.change > 0" [class.negative]="stock.change < 0">
             {{ stock.change > 0 ? '+' : '' }}{{ stock.change }}%
           </td>
+          <td>{{ stock.asOf }}</td>
         </tr>
       </tbody>
     </table>
@@ -28,37 +30,42 @@
   
   <section class="section news">
     <h2>Latest Business News</h2>
+    <p *ngIf="newsStatus">{{ newsStatus }}</p>
     <div class="news-item" *ngFor="let article of news">
-      <h3>{{ article.title }}</h3>
+      <h3><a [href]="article.link" target="_blank" rel="noopener">{{ article.title }}</a></h3>
       <p>{{ article.summary }}</p>
-      <a [href]="article.link" target="_blank">Read More</a>
+      <a [href]="article.link" target="_blank" rel="noopener">Read More</a>
     </div>
   </section>
 
   
   <section class="section updates">
     <h2>Major Business Updates</h2>
+    <p *ngIf="updateStatus">{{ updateStatus }}</p>
     <ul>
       <li *ngFor="let update of businessUpdates">
-        <strong>{{ update.title }}:</strong> {{ update.detail }}
+        <a [href]="update.link" target="_blank" rel="noopener"><strong>{{ update.title }}</strong></a>
+        <span> {{ update.summary }}</span>
       </li>
     </ul>
   </section>
 
   
   <section class="section tax-rates">
-    <h2>Approximated Tax Rates</h2>
+    <h2>Tax Year 2026</h2>
+    <p>{{ taxNote }}</p>
+    <p>Checked {{ checked }}.</p>
     <table class="tax-rates-table">
       <thead>
         <tr>
           <th>Category</th>
-          <th>Rate (%)</th>
+          <th>Figure</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let rate of taxRates">
-          <td>{{ rate.category }}</td>
-          <td>{{ rate.rate }}%</td>
+          <td><a [href]="rate.link" target="_blank" rel="noopener">{{ rate.category }}</a></td>
+          <td>{{ rate.figure }}</td>
         </tr>
       </tbody>
     </table>

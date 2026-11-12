@@ -12,10 +12,14 @@
       <button class="generate-summary-btn" (click)="generateSummary()">Generate Summary</button>
 
       
+      <p *ngIf="notice">{{ notice }}</p>
+      <p *ngIf="!loggedIn">Log in so the summary uses the transactions on your account.</p>
+
       <div *ngIf="summaryGenerated">
         <h3>Summary Generated:</h3>
         <p class="generated-text">Income - {{ summaryIncome | currency }}</p>
         <p class="generated-text">Expenses - {{ summaryExpenses | currency }}</p>
+        <p class="generated-text">Net - {{ summaryNet | currency }}</p>
         <p class="generated-text">Period - {{ filterPeriod | uppercase }}</p>
       </div>
 
@@ -45,6 +49,7 @@
       <ul>
         <li *ngFor="let report of reports" class="generated-text">{{ report }}</li>
       </ul>
+      <button (click)="downloadReport()">Download Report</button>
       <button (click)="clearReports()">Clear Reports</button>
     </div>
   </div>
