@@ -1,19 +1,7 @@
-Version 7 is the finance tracker with the parts that only pretended to work taken out. The page still looks like version 6. What changed is that the buttons write real data and the outside pages read real sources.
+﻿for this i split the tracker into six folders and each folder adds a feature until it gets to the full site. i didnt really restyle anything. outside sources are yahoo finance for the stocks and google fonts for the lettering.
 
-Sign up saves the account in the browser, under that username, and login checks that same record. Logging out only ends the session. It does not wipe the transactions, so you can log back in and the rows are still there. Version 6 kept a single username and password for the whole site, and the header logout cleared storage, so the next login had nothing to check.
+version 1 is just the home page with the header and the footer. version 2 adds login and signup and logout and it saves the account in the browser. version 3 adds the organizer so you can add transactions and tasks and notes on the days. version 4 adds the track page and that one totals the income and the expenses and it warns you if the bill stuff looks constant. version 5 adds the trends page and hooks the stock table to yahoo so apple tesla google and amazon show the actual price and the actual change. version 6 adds kids mode and the help chat and the help chat is connected so you get a real reply back.
 
-The organizer search looks through the description, the category, the date, and the amount. Adding a transaction, a task, or a calendar note stores it on the logged-in account and leaves the date you picked alone. Version 6 rewrote every loaded date to March 14, 2025, and the help search box was not connected to anything. Edit fills the form and saves over the same row instead of deleting it first.
+to run one just go in the folder and do npm install then npx ng serve and it comes up on localhost 4200. the trends page and the help page need that because those calls go through the dev server.
 
-Track builds the weekly or monthly summary from those saved rows. The report lists the income, the expenses, the net, and each line that fell in the window. You can download that text. The old page used three sample transactions and a warning that only mentioned food bills and loans.
-
-Help, and the assistant on the organizer, call the language model through the dev server. The request includes the account totals, the recent rows, the tasks, and the notes, and the reply is supposed to stay inside that list. The canned lines about water bills and a fixed number of deposits are gone. The old forum links went nowhere, so the sidebar now opens Organizer, Track, and Trends.
-
-Trends asks Yahoo for the daily price on Apple, Tesla, Google, and Amazon. The symbol opens the Yahoo quote page, and the session time is the one Yahoo sent back. The news blocks are Yahoo headlines with the publisher, the time, and the article link. The example.com stories and the made-up business blurbs are gone. The tax table is tax year 2026 from IRS Revenue Procedure 2025-32, and each row links to the IRS page or the statute. Those figures change by tax year, not by the trading day, and there is no single U.S. sales tax, so that 8.5% row is gone. Kids mode search filters the products, and a logged-in balance survives a refresh.
-
-To run it, from the version-7 folder:
-
-npm install
-
-npx ng serve
-
-Open http://localhost:4200/. Trends and help need that dev server because Yahoo and the chat call go through the proxy. Neither one needs a key.
+version 7 fixes some bugs.
