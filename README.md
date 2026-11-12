@@ -2,5 +2,5 @@
 
 ## My website
 
-lockap.com is my website: https://lockap.com
+lockap.com is a study website I built: https://lockap.com
 
